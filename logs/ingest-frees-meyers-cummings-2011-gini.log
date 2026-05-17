@@ -1,0 +1,43 @@
+
+Ingesting: frees-meyers-cummings-2011-gini.md  (hash: 4f548734417ec3e3)
+  calling API (model: ...)
+  wrote: wiki/sources/frees-meyers-cummings-2011-gini.md
+  wrote: wiki/entities/EdwardWFrees.md
+  wrote: wiki/entities/GlennMeyers.md
+  wrote: wiki/entities/ADavidCummings.md
+  wrote: wiki/concepts/GiniIndex.md
+  wrote: wiki/concepts/LorenzCurve.md
+  wrote: wiki/concepts/AdverseSelection.md
+  wrote: wiki/overview.md
+  wrote: wiki/index.md
+  wrote: wiki/log.md
+
+==================================================
+  ✅ Ingested: Risk Based Scores and the Gini Index
+==================================================
+  Created : 7 pages
+           + wiki/sources/frees-meyers-cummings-2011-gini.md
+           + wiki/entities/EdwardWFrees.md
+           + wiki/entities/GlennMeyers.md
+           + wiki/entities/ADavidCummings.md
+           + wiki/concepts/GiniIndex.md
+           + wiki/concepts/LorenzCurve.md
+           + wiki/concepts/AdverseSelection.md
+  Updated : 3 pages
+           ~ wiki/index.md
+           ~ wiki/log.md
+           ~ wiki/overview.md
+  ⚠️  Broken links: 5
+           wiki/sources/frees-meyers-cummings-2011-gini.md → [[Gini Index]]
+           wiki/sources/frees-meyers-cummings-2011-gini.md → [[Lorenz Curve]]
+           wiki/sources/frees-meyers-cummings-2011-gini.md → [[Lorenz Curve]]
+           wiki/sources/frees-meyers-cummings-2011-gini.md → [[Adverse Selection]]
+           wiki/sources/frees-meyers-cummings-2011-gini.md → [[Insurance Pricing]]
+  ⚠️  Not in index.md: 6
+           wiki/entities/EdwardWFrees.md
+           wiki/entities/GlennMeyers.md
+           wiki/entities/ADavidCummings.md
+           wiki/concepts/GiniIndex.md
+           wiki/concepts/LorenzCurve.md
+           wiki/concepts/AdverseSelection.md
+

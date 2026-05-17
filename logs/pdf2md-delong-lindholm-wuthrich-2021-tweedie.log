@@ -1,0 +1,22 @@
+
+pdf2md — LLM Wiki Agent
+  Input:   /Users/passwork12345/Downloads/papers/delong_lindholm_wuthrich_2021_tweedie_accessible.pdf
+  Output:  raw/papers/delong-lindholm-wuthrich-2021-tweedie.md
+  Backend: pymupdf4llm
+
+=== Document parser messages ===
+Using Tesseract for OCR processing.
+OCR on page.number=0/1.
+OCR on page.number=27/28.
+OCR on page.number=29/30.
+OCR on page.number=31/32.
+OCR on page.number=33/34.
+OCR on page.number=37/38.
+OCR on page.number=38/39.
+OCR on page.number=39/40.
+
+  ✓ Converted delong_lindholm_wuthrich_2021_tweedie_accessible.pdf → raw/papers/delong-lindholm-wuthrich-2021-tweedie.md
+
+Done. Now ingest with:
+  python tools/ingest.py raw/papers/delong-lindholm-wuthrich-2021-tweedie.md
+  — or in your agent: ingest raw/papers/delong-lindholm-wuthrich-2021-tweedie.md

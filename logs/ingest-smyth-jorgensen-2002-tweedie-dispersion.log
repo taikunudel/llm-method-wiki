@@ -1,0 +1,33 @@
+
+Ingesting: smyth-jorgensen-2002-tweedie-dispersion.md  (hash: 28a0cd1521032cb6)
+  calling API (model: ...)
+  wrote: wiki/sources/smyth-jorgensen-2002-tweedie-dispersion.md
+  wrote: wiki/entities/Jorgensen.md
+  wrote: wiki/entities/DeSouza.md
+  wrote: wiki/concepts/TweedieDistribution.md
+  wrote: wiki/concepts/GeneralizedLinearModels.md
+  wrote: wiki/index.md
+  wrote: wiki/log.md
+
+==================================================
+  ✅ Ingested: Fitting Tweedie's Compound Poisson Model to Insurance Claims Data: Dispersion Modelling
+==================================================
+  Created : 5 pages
+           + wiki/sources/smyth-jorgensen-2002-tweedie-dispersion.md
+           + wiki/entities/Jorgensen.md
+           + wiki/entities/DeSouza.md
+           + wiki/concepts/TweedieDistribution.md
+           + wiki/concepts/GeneralizedLinearModels.md
+  Updated : 2 pages
+           ~ wiki/index.md
+           ~ wiki/log.md
+  ⚠️  Broken links: 4
+           wiki/sources/smyth-jorgensen-2002-tweedie-dispersion.md → [[Tweedie Distribution]]
+           wiki/sources/smyth-jorgensen-2002-tweedie-dispersion.md → [[De Souza]]
+           wiki/sources/smyth-jorgensen-2002-tweedie-dispersion.md → [[Generalized Linear Models]]
+           wiki/sources/smyth-jorgensen-2002-tweedie-dispersion.md → [[Tweedie Distribution]]
+  ⚠️  Not in index.md: 3
+           wiki/entities/DeSouza.md
+           wiki/concepts/TweedieDistribution.md
+           wiki/concepts/GeneralizedLinearModels.md
+

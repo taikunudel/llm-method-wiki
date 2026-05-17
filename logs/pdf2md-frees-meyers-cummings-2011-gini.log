@@ -1,0 +1,14 @@
+
+pdf2md — LLM Wiki Agent
+  Input:   /Users/passwork12345/Downloads/papers/frees_meyers_cummings_2011_gini_insurance_scores_preprint.pdf
+  Output:  raw/papers/frees-meyers-cummings-2011-gini.md
+  Backend: pymupdf4llm
+
+=== Document parser messages ===
+Using Tesseract for OCR processing.
+
+  ✓ Converted frees_meyers_cummings_2011_gini_insurance_scores_preprint.pdf → raw/papers/frees-meyers-cummings-2011-gini.md
+
+Done. Now ingest with:
+  python tools/ingest.py raw/papers/frees-meyers-cummings-2011-gini.md
+  — or in your agent: ingest raw/papers/frees-meyers-cummings-2011-gini.md

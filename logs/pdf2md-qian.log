@@ -1,0 +1,20 @@
+
+pdf2md — LLM Wiki Agent
+  Input:   /Users/passwork12345/Downloads/papers/Qian et al. - 2016 - Tweedie’s Compound Poisson Model With Grouped Elastic Net.pdf
+  Output:  raw/papers/qian-2016-hdtweedie.md
+  Backend: pymupdf4llm
+
+=== Document parser messages ===
+Using Tesseract for OCR processing.
+OCR on page.number=0/1.
+OCR on page.number=1/2.
+OCR on page.number=2/3.
+OCR on page.number=14/15.
+OCR on page.number=17/18.
+OCR on page.number=18/19.
+
+  ✓ Converted Qian et al. - 2016 - Tweedie’s Compound Poisson Model With Grouped Elastic Net.pdf → raw/papers/qian-2016-hdtweedie.md
+
+Done. Now ingest with:
+  python tools/ingest.py raw/papers/qian-2016-hdtweedie.md
+  — or in your agent: ingest raw/papers/qian-2016-hdtweedie.md

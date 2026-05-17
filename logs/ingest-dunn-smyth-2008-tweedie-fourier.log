@@ -1,0 +1,36 @@
+
+Ingesting: dunn-smyth-2008-tweedie-fourier.md  (hash: 6c0f80908e120cd8)
+  calling API (model: ...)
+  wrote: wiki/sources/dunn-smyth-2008-tweedie-fourier.md
+  wrote: wiki/entities/PeterKDunn.md
+  wrote: wiki/entities/GordonKSmyth.md
+  wrote: wiki/concepts/FourierInversion.md
+  wrote: wiki/index.md
+  wrote: wiki/log.md
+
+  ⚠️  Contradictions detected:
+     - Contradicts [[smyth-jorgensen-2002-tweedie-dispersion]] on the preferred methods under different parameter conditions.
+
+==================================================
+  ✅ Ingested: Evaluation of Tweedie Exponential Dispersion Model Densities by Fourier Inversion
+==================================================
+  Created : 4 pages
+           + wiki/sources/dunn-smyth-2008-tweedie-fourier.md
+           + wiki/entities/PeterKDunn.md
+           + wiki/entities/GordonKSmyth.md
+           + wiki/concepts/FourierInversion.md
+  Updated : 2 pages
+           ~ wiki/index.md
+           ~ wiki/log.md
+  Warnings: 1 contradiction(s)
+  ⚠️  Broken links: 5
+           wiki/sources/dunn-smyth-2008-tweedie-fourier.md → [[Tweedie Distribution]]
+           wiki/sources/dunn-smyth-2008-tweedie-fourier.md → [[Fourier Inversion]]
+           wiki/sources/dunn-smyth-2008-tweedie-fourier.md → [[Generalized Linear Models]]
+           wiki/entities/PeterKDunn.md → [[Tweedie Distribution]]
+           wiki/entities/GordonKSmyth.md → [[Tweedie Distribution]]
+  ⚠️  Not in index.md: 3
+           wiki/entities/PeterKDunn.md
+           wiki/entities/GordonKSmyth.md
+           wiki/concepts/FourierInversion.md
+

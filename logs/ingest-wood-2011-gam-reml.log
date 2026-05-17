@@ -1,0 +1,31 @@
+
+Ingesting: wood-2011-gam-reml.md  (hash: 15f3ea84abd296b6)
+  calling API (model: ...)
+  wrote: wiki/sources/wood-2011-gam-reml.md
+  wrote: wiki/entities/SimonNWood.md
+  wrote: wiki/concepts/GeneralizedAdditiveModels.md
+  wrote: wiki/concepts/Smoothing.md
+  wrote: wiki/overview.md
+  wrote: wiki/index.md
+  wrote: wiki/log.md
+
+==================================================
+  ✅ Ingested: Efficient Smoothing for Generalized Additive Models
+==================================================
+  Created : 4 pages
+           + wiki/sources/wood-2011-gam-reml.md
+           + wiki/entities/SimonNWood.md
+           + wiki/concepts/GeneralizedAdditiveModels.md
+           + wiki/concepts/Smoothing.md
+  Updated : 3 pages
+           ~ wiki/index.md
+           ~ wiki/log.md
+           ~ wiki/overview.md
+  ⚠️  Broken links: 3
+           wiki/sources/wood-2011-gam-reml.md → [[Generalized Additive Models]]
+           wiki/sources/wood-2011-gam-reml.md → [[R (programming language)]]
+           wiki/sources/wood-2011-gam-reml.md → [[GAM]]
+  ⚠️  Not in index.md: 2
+           wiki/entities/SimonNWood.md
+           wiki/concepts/GeneralizedAdditiveModels.md
+

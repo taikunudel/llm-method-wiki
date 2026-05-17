@@ -1,0 +1,36 @@
+
+Ingesting: yang-2016-tdboost.md  (hash: 7b01fc18c8c4e1bc)
+  calling API (model: ...)
+  wrote: wiki/sources/yang-2016-tdboost.md
+  wrote: wiki/entities/YiYang.md
+  wrote: wiki/entities/WeiQian.md
+  wrote: wiki/entities/HuiZou.md
+  wrote: wiki/concepts/GradientTreeBoosting.md
+  wrote: wiki/overview.md
+  wrote: wiki/index.md
+  wrote: wiki/log.md
+
+==================================================
+  ✅ Ingested: Insurance Premium Prediction via Gradient Tree-Boosted Tweedie Compound Poisson Models
+==================================================
+  Created : 5 pages
+           + wiki/sources/yang-2016-tdboost.md
+           + wiki/entities/YiYang.md
+           + wiki/entities/WeiQian.md
+           + wiki/entities/HuiZou.md
+           + wiki/concepts/GradientTreeBoosting.md
+  Updated : 3 pages
+           ~ wiki/index.md
+           ~ wiki/log.md
+           ~ wiki/overview.md
+  ⚠️  Broken links: 4
+           wiki/sources/yang-2016-tdboost.md → [[Tweedie GLM]]
+           wiki/sources/yang-2016-tdboost.md → [[Gradient Tree-Boosting]]
+           wiki/sources/yang-2016-tdboost.md → [[R (programming language)]]
+           wiki/sources/yang-2016-tdboost.md → [[Tweedie Distribution]]
+  ⚠️  Not in index.md: 4
+           wiki/entities/YiYang.md
+           wiki/entities/WeiQian.md
+           wiki/entities/HuiZou.md
+           wiki/concepts/GradientTreeBoosting.md
+

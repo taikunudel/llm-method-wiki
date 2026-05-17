@@ -1,0 +1,14 @@
+
+pdf2md — LLM Wiki Agent
+  Input:   /Users/passwork12345/Downloads/papers/zhang_2013_cplm_compound_poisson_linear_models.pdf
+  Output:  raw/papers/zhang-2013-cplm.md
+  Backend: pymupdf4llm
+
+=== Document parser messages ===
+Using Tesseract for OCR processing.
+
+  ✓ Converted zhang_2013_cplm_compound_poisson_linear_models.pdf → raw/papers/zhang-2013-cplm.md
+
+Done. Now ingest with:
+  python tools/ingest.py raw/papers/zhang-2013-cplm.md
+  — or in your agent: ingest raw/papers/zhang-2013-cplm.md

@@ -1,0 +1,15 @@
+
+pdf2md — LLM Wiki Agent
+  Input:   /Users/passwork12345/Downloads/papers/yang_qian_zou_2015_tdboost_insurance_premium_prediction.pdf
+  Output:  raw/papers/yang-2016-tdboost.md
+  Backend: pymupdf4llm
+
+=== Document parser messages ===
+Using Tesseract for OCR processing.
+OCR on page.number=17/18.
+
+  ✓ Converted yang_qian_zou_2015_tdboost_insurance_premium_prediction.pdf → raw/papers/yang-2016-tdboost.md
+
+Done. Now ingest with:
+  python tools/ingest.py raw/papers/yang-2016-tdboost.md
+  — or in your agent: ingest raw/papers/yang-2016-tdboost.md

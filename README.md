@@ -1,306 +1,134 @@
-# LLM Wiki Agent
+# llm-method-wiki
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+A method-aware fork of [SamurAIGPT/llm-wiki-agent](https://github.com/SamurAIGPT/llm-wiki-agent) (which itself derives from [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki)) — same "drop sources in, get a wiki" idea, but the templates capture **operational** knowledge (canonical API calls, paper-recommended hyperparameters, argument quirks, silent-failure modes, runnable code examples) instead of just summaries. Built so a coding agent can actually *use* the wiki when writing model code, not merely read it for context.
 
-**A coding agent skill.** Drop source documents into `raw/` and tell the agent to ingest them — it reads them, extracts knowledge, and builds a persistent interlinked wiki. Every new source makes the wiki richer. You never write it.
+The shipped wiki seeds the knowledge base with 8 auto-insurance / Tweedie modeling papers and 8 runnable R snippets — useful as a starting corpus or just as a worked example of what the schema produces.
 
-> Most knowledge tools make you search your own notes. This one reads everything you've collected and writes a structured wiki that compounds over time — cross-references already built, contradictions already flagged, synthesis already done.
+## What's different from upstream
 
-```
-ingest raw/papers/attention-is-all-you-need.md
-```
+- **Method-paper template** — every source page tagged `method`/`software` has required sections: `Canonical API`, `Key Hyperparameters`, `Argument Quirks`, `Failure Modes`, `Code Example`, `Domain Pitfalls`.
+- **Concept-page template variants** — `Method/Software Concept` vs `Domain Concept`, each with its own required sections (originals were free-form).
+- **`wiki/examples/` directory** — one runnable snippet per method, written to compile end-to-end against a canonical dataset. Agents are encouraged to copy verbatim, then modify.
+- **`wiki-naive/`** — the pre-regen state preserved side-by-side so you can `diff` what the method-aware schema produced versus the naive schema on the *same* sources.
+- **Three-agent compatibility** — `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` carry identical schema content, so Claude Code, Codex/OpenCode, and Gemini CLI all read the same rules.
+- **Domain-specific source templates** — Diary/Journal and Meeting Notes, alongside the generic source template.
+- **9 standalone Python tools** in `tools/`: `build_graph.py`, `file_to_md.py`, `heal.py`, `health.py`, `ingest.py`, `lint.py`, `pdf2md.py`, `query.py`, `refresh.py`.
 
-```
-wiki/
-├── index.md          catalog of all pages — updated on every ingest
-├── log.md            append-only record of every operation
-├── overview.md       living synthesis across all sources
-├── sources/          one summary page per source document
-├── entities/         people, companies, projects — auto-created
-├── concepts/         ideas, frameworks, methods — auto-created
-└── syntheses/        query answers filed back as wiki pages
-graph/
-├── graph.json        persistent node/edge data (SHA256-cached)
-└── graph.html        interactive vis.js visualization — open in any browser
-```
+Original upstream README preserved as [`README-UPSTREAM.md`](README-UPSTREAM.md).
 
-## Install
+---
 
-**Requires:** [Claude Code](https://claude.ai/code), [Codex](https://openai.com/codex), [Gemini CLI](https://github.com/google-gemini/gemini-cli), or any agent that reads a config file.
+## Setup — using this with openclaw (or any agent that reads `AGENTS.md`)
+
+**Step 1.** Clone this repo into your openclaw workspace so the wiki sits next to your work:
 
 ```bash
-git clone https://github.com/SamurAIGPT/llm-wiki-agent.git
-cd llm-wiki-agent
+cd ~/.openclaw/workspace          # or wherever your agent's workspace lives
+git clone https://github.com/taikunudel/llm-method-wiki llm-wiki-agent
 ```
 
-Open in your agent — no API key or Python setup needed:
+(The folder name `llm-wiki-agent` is what the schema and the snippet below expect. If you prefer another name, change every `llm-wiki-agent/` path in the snippet to match.)
 
-```bash
-claude      # reads CLAUDE.md + .claude/commands/ (slash commands available)
-codex       # reads AGENTS.md
-opencode    # reads AGENTS.md
-gemini      # reads GEMINI.md
+**Step 2.** Tell your agent the wiki exists by pasting this block into your workspace's `AGENTS.md` (and/or `CLAUDE.md`, `GEMINI.md` — whichever your harness loads). Drop it anywhere near the top:
+
+```markdown
+## 📚 Knowledge Base — Optional
+
+There's a local wiki at `llm-wiki-agent/wiki/` that may have relevant
+background for your task. Layout:
+
+- `index.md`   — one-line catalog of every page (start here)
+- `overview.md` — current synthesis across all sources
+- `sources/`   — per-document summaries
+- `concepts/`  — ideas, methods, frameworks
+- `entities/`  — people, packages, organizations
+- `examples/`  — runnable snippets, if any exist for the topic
+
+**Why a glance can be worth it:** the wiki tends to capture
+package-specific gotchas, paper-recommended hyperparameters, and silent-
+failure modes that often aren't in your training data. When it's
+relevant, skipping it can cost more debugging time than reading it
+would.
+
+**Cost is low:** the wiki is small — `index.md` is typically under 100
+lines. Scanning the catalog takes seconds.
+
+Use it when useful, ignore it otherwise. Contents change over time, so
+don't assume what's in there — check `index.md` if you think it might
+help. If you do use a page, a `[[PageName]]` reference in code comments
+or in your trajectory makes the work easier to retrace.
 ```
 
-## Usage
+That's it. The next session your agent loads `AGENTS.md`, it will know the wiki is there, where to find the catalog, and how to cite pages back. The block is *advisory* — the agent decides whether to consult it based on task relevance.
 
-All agents understand natural language and shorthand triggers:
+**Optional Step 3 — trajectory logging for audit:** if you want to later audit *whether* the agent used the wiki, also paste the `## 📋 Task Trajectory — Log What You Do` section below into the same `AGENTS.md`. It tells the agent to write JSON events to `audit/trajectories/<task-id>.jsonl` as it works. See `audit/` design notes (not in this repo yet — a future addition).
 
-```
-ingest raw/papers/my-paper.md              # ingest a markdown source
-ingest report.pdf                          # auto-converts to .md, then ingests
-ingest slides.pptx notes.docx              # batch, mixed formats
-query: what are the main themes?           # synthesize answer from wiki pages
-lint                                       # find orphans, contradictions, gaps
-build graph                                # build graph.html from all wikilinks
-```
+<details>
+<summary>Trajectory block (optional, click to expand)</summary>
 
-Plain English works too:
-```
-"Ingest this paper: raw/papers/llama2.md"
-"What does the wiki say about attention mechanisms?"
-"Check for contradictions across sources"
-"Build the knowledge graph and tell me the most connected nodes"
-```
+```markdown
+## 📋 Task Trajectory — Log What You Do
 
-**Claude Code** also provides `/wiki-ingest`, `/wiki-query`, `/wiki-lint`, `/wiki-graph` as slash commands (via `.claude/commands/`). These are Claude Code-specific — other agents use the natural language triggers above, which work identically.
+When working on a modeling, coding, or domain task that consults the wiki at
+`llm-wiki-agent/wiki/`, record what you do as you do it so the work can be
+audited later.
 
-Works with markdown, PDF, DOCX, PPTX, XLSX, HTML, TXT, CSV, JSON, XML, RST, EPUB, and more. Non-markdown files are auto-converted via [markitdown](https://github.com/microsoft/markitdown) at ingest time — no separate step needed.
+**Where:** `audit/trajectories/<task-id>.jsonl` at the workspace root. Create
+the `audit/trajectories/` folder if it doesn't exist. `<task-id>` is a short
+slug — e.g. `auto-ins-2026-05-16` or whatever uniquely identifies this run.
 
-## What You Get
+**Format:** one JSON object per line, appended in real time (not batched at
+the end — timestamps matter to the auditor). Required event types:
 
-**Persistent wiki** — structured markdown pages that accumulate across sessions. Unlike chat, nothing is lost.
-
-**Entity pages** — auto-created for every person, company, or project mentioned across sources. Updated each time a new source references them.
-
-**Concept pages** — auto-created for every key idea or framework. Cross-referenced to every source that discusses them.
-
-**Living overview** — `wiki/overview.md` is revised on every ingest to reflect the current synthesis across everything you've read.
-
-**Contradiction flags** — when a new source contradicts an existing claim, it's flagged at ingest time, not buried until query time.
-
-**Knowledge graph** — `graph.html` shows every wiki page as a node, every `[[wikilink]]` as an edge, and Claude-inferred implicit relationships as dotted edges. Community detection clusters related topics.
-
-**Lint reports** — orphan pages, broken links, missing entity pages, data gaps with suggested sources to fill them.
-
-## Use Cases
-
-### Research
-
-Going deep on a topic over weeks — reading papers, articles, reports.
-
-```
-/wiki-ingest raw/papers/attention-is-all-you-need.md
-/wiki-ingest raw/papers/llama2.md
-/wiki-ingest raw/papers/rag-survey.md
-
-# Wiki builds entity pages (Meta AI, Google Brain) and
-# concept pages (Attention, RLHF, Context Window) automatically.
-
-/wiki-query "What are the main approaches to reducing hallucination?"
-/wiki-query "How has context window size evolved across models?"
-
-/wiki-lint
-# → "No sources on mixture-of-experts — consider the Mixtral paper"
-```
-
-By the end you have a structured, interlinked reference — not a folder of PDFs you'll never reopen.
-
----
-
-### Reading a Book
-
-File each chapter as you go. Build out pages for characters, themes, arguments.
-
-```
-/wiki-ingest raw/book/chapter-01.md
-/wiki-ingest raw/book/chapter-02.md
-
-# Wiki creates entity and theme pages automatically.
-
-/wiki-query "How has the protagonist's motivation evolved?"
-/wiki-query "What contradictions exist in the author's argument so far?"
-
-/wiki-graph   # → graph.html shows every character/theme and how they connect
-```
-
-Think fan wikis like Tolkien Gateway — built as you read, with the agent doing all the cross-referencing.
-
----
-
-### Personal Knowledge Base
-
-Track goals, health, habits, self-improvement — file journal entries, articles, podcast notes.
-
-```
-/wiki-ingest raw/journal/2026-01-week1.md
-/wiki-ingest raw/articles/huberman-sleep-protocol.md
-/wiki-ingest raw/articles/atomic-habits-summary.md
-
-/wiki-query "What patterns show up in my journal entries about energy?"
-/wiki-query "What habits have I tried and what was the outcome?"
-```
-
-The wiki builds a structured picture over time. Concepts like "Sleep", "Exercise", "Deep Work" accumulate evidence from every source filed.
-
----
-
-### Business / Team Intelligence
-
-Feed in meeting transcripts, project docs, customer calls.
-
-```
-/wiki-ingest raw/meetings/q1-planning-transcript.md
-/wiki-ingest raw/docs/product-roadmap-2026.md
-/wiki-ingest raw/calls/customer-interview-acme.md
-
-/wiki-query "What feature requests have come up most across customer calls?"
-/wiki-query "What decisions were made in Q1 and what was the rationale?"
-
-/wiki-lint
-# → "Project X mentioned in 5 pages but no dedicated page"
-# → "Roadmap contradicts customer interview on priority of feature Y"
-```
-
-The wiki stays current because the agent does the maintenance no one wants to do.
-
----
-
-### Competitive Analysis
-
-Track a company, market, or technology over time.
-
-```
-/wiki-ingest raw/competitors/openai-announcements.md
-/wiki-ingest raw/market/ai-funding-report-q1.md
-
-/wiki-query "How do OpenAI and Anthropic differ on safety approach?"
-/wiki-query "Which companies announced multimodal models in the last 6 months?"
-/wiki-query "Competitive landscape summary as of today"
-# → agent shows the answer, then asks if you want to save it as a synthesis page
-```
-
-## The Graph
-
-Two-pass build:
-
-1. **Deterministic** — parses all `[[wikilinks]]` across wiki pages → edges tagged `EXTRACTED`
-2. **Semantic** — agent infers implicit relationships not captured by wikilinks → edges tagged `INFERRED` (with confidence score) or `AMBIGUOUS`
-
-Louvain community detection clusters nodes by topic. SHA256 cache means only changed pages are reprocessed. Output is a self-contained `graph.html` — no server, opens in any browser.
-
-## CLAUDE.md / AGENTS.md
-
-The schema file tells the agent how to maintain the wiki — page formats, ingest/query/lint/graph workflows, naming conventions. This is the key config file. Edit it to customize behavior for your domain.
-
-| Agent | Schema file |
+| event | required fields |
 |---|---|
-| Claude Code | `CLAUDE.md` |
-| Codex / OpenCode | `AGENTS.md` |
-| Gemini CLI | `GEMINI.md` |
+| `task_start` | `ts`, `task_id`, `goal`, `wiki_root`, `git_branch_start` |
+| `wiki_read` | `ts`, `task_id`, `page_id`, `bytes_read`, `sha256` |
+| `decision` | `ts`, `task_id`, `summary`, `cites: [page_id,...]`, `rationale` |
+| `code_edit` | `ts`, `task_id`, `path`, `lines_added`, `lines_removed`, `cites: [page_id,...]` |
+| `code_run` | `ts`, `task_id`, `cmd`, `exit_code`, `summary` |
+| `gap_surfaced` | `ts`, `task_id`, `concept`, `expected_page` |
+| `task_end` | `ts`, `task_id`, `summary`, `git_branch_end`, `git_sha_end` |
 
-## What Makes This Different from RAG
+`ts` is ISO-8601 UTC (`2026-05-16T14:22:01Z`). `page_id` is the path relative
+to `wiki/` (e.g. `concepts/TweedieDistribution.md`). `sha256` is the hash of
+the page contents at the time you read it — the auditor recomputes from git
+to detect fabricated reads.
 
-| RAG | LLM Wiki Agent |
-|---|---|
-| Re-derives knowledge every query | Compiles once, keeps current |
-| Raw chunks as retrieval unit | Structured wiki pages |
-| No cross-references | Cross-references pre-built |
-| Contradictions surface at query time (maybe) | Flagged at ingest time |
-| No accumulation | Every source makes the wiki richer |
+**Rules:**
+- Append-only. Never edit or delete past entries.
+- Emit each event immediately after the action it describes, not in a batch.
+- Every `decision` and `code_edit` MUST have a non-empty `cites` array if the
+  wiki informed it. Empty cites on a substantive decision = faithfulness fail.
+- Mirror every `Read` of a `wiki/**` file as a `wiki_read` event.
 
-## Obsidian Integration
-
-The wiki is designed to be browsed seamlessly in [Obsidian](https://obsidian.md). Since the agent maintains consistent `[[wikilinks]]`, you get a naturally growing knowledge graph in your vault.
-
-### Vault Symlink Pattern
-If you want to keep the LLM Wiki Agent repository separate from your main personal vault, use symlinks:
-1. Keep your working agent repository at e.g., `~/llm-wiki-agent`
-2. Create a symlink from your main Obsidian vault:
-   ```bash
-   ln -sfn ~/llm-wiki-agent/wiki ~/your-obsidian-vault/wiki
-   ```
-3. Use the [Obsidian Web Clipper](https://obsidian.md/clipper) or write directly to `raw/` in the agent repo to queue items for ingestion.
-
-> **Note:** If you ever move your local repo directory, remember to update the symlink, otherwise the `wiki/` directory will appear missing in Obsidian.
-
-### Recommended .obsidian Config
-- **Graph View:** Filter out `index.md` and `log.md` (e.g. `-file:index.md -file:log.md`) to avoid them becoming gravity wells in your Obsidian graph.
-- **Dataview:** Use the community plugin [Dataview](https://blacksmithgu.github.io/obsidian-dataview/) to query the YAML frontmatter the agent automatically injects (e.g., `type: source`, `tags: [diary]`).
-
-## Multi-Format Ingest
-
-Drop any supported file directly into `ingest` — no separate conversion step needed:
-
-```bash
-# These all work — auto-converted at ingest time
-ingest report.pdf
-ingest meeting-notes.docx
-ingest slides.pptx
-ingest data.xlsx
-ingest page.html
-ingest raw/mixed-folder/          # recursively finds all supported files
+**Honesty:** the auditor cross-checks your trajectory against git history
+(`git log -p`, file mtimes) and any harness-level tool logs. Omissions and
+fabrications are detectable. Be complete — it's cheaper than getting caught.
 ```
 
-**Supported formats:**
-`.md` `.pdf` `.docx` `.pptx` `.xlsx` `.xls` `.html` `.htm` `.txt` `.csv` `.json` `.xml` `.rst` `.rtf` `.epub` `.ipynb` `.yaml` `.yml` `.tsv` `.wav` `.mp3`
+</details>
 
-Non-markdown files are auto-converted via [markitdown](https://github.com/microsoft/markitdown). Use `--no-convert` to skip auto-conversion and process only `.md` files.
+---
 
-### arXiv Papers (Advanced)
+## What's seeded in the wiki
 
-For arXiv papers, use `tools/pdf2md.py` for higher-fidelity conversion:
+The `wiki/` ships pre-populated with the auto-insurance / Tweedie corpus used to develop this fork:
 
-```bash
-python tools/pdf2md.py 2401.12345                      # by arXiv ID
-python tools/pdf2md.py https://arxiv.org/abs/2401.12345 # by URL
-python tools/pdf2md.py paper.pdf --backend marker       # complex multi-column PDFs
-```
+- **8 source papers** — Smyth-Jorgensen (2002), Dunn-Smyth (2008), Frees-Meyers-Cummings (2011), Wood (2011), Zhang (2013), Qian-Yang-Zou (2016), Yang-Qian-Zou (2016), Delong-Lindholm-Wüthrich (2021).
+- **8 runnable R examples** in `wiki/examples/` — one per method, each calling its package against `cplm::AutoClaim`.
+- **17 concept pages** — Tweedie distribution, GLM, GAM, gradient boosting, grouped elastic net, Gini index, adverse selection, etc.
+- **14 entity pages** — authors and R packages.
 
-Then ingest the resulting `.md`:
-```
-ingest raw/papers/my-paper.md
-```
+Delete or replace the seed content if you only want the schema; it's small (~150 KB) and easily removed with `rm -rf wiki/* raw/papers/* && git checkout wiki/index.md wiki/log.md wiki/overview.md`.
 
-### Batch Directory Conversion (Advanced)
-
-To pre-convert an entire directory (useful for bulk imports):
-```bash
-python tools/file_to_md.py --input_dir raw/imports/
-python tools/file_to_md.py --input_dir raw/imports/ --delete_source  # remove originals
-```
-
-### Optional Dependencies
-
-| Package | Install | Used for |
-|---|---|---|
-| [markitdown](https://github.com/microsoft/markitdown) | `pip install markitdown` | Auto-conversion of non-.md files (required for multi-format ingest) |
-| [arxiv2md](https://github.com/ryansingman/arxiv2md) | `pip install arxiv2markdown` | arXiv papers via structured source |
-| [Marker](https://github.com/VikParuchuri/marker) | `pip install marker-pdf` | Complex academic PDFs with multi-column layouts |
-| [PyMuPDF4LLM](https://github.com/pymupdf/RAG) | `pip install pymupdf4llm` | Fast PDF extraction (no GPU needed) |
-| [tqdm](https://github.com/tqdm/tqdm) | `pip install tqdm` | Progress bar for batch directory conversion |
-
-## Tips
-
-- Just drop files (PDF, DOCX, etc.) into `raw/` and `ingest` them — conversion is automatic
-- For arXiv papers, `tools/pdf2md.py` gives higher-fidelity output than generic markitdown conversion
-- Query answers are shown first — the agent then asks if you want to file them as synthesis pages. Your explorations compound just like ingested sources
-- The wiki is a git repo — version history for free
-- Standalone Python scripts in `tools/` work without a coding agent (require `ANTHROPIC_API_KEY`)
-
-## Tech Stack
-
-NetworkX + Louvain + Claude + vis.js. No server, no database, runs entirely locally. Everything is plain markdown files.
-
-## Related
-
-- [graphify](https://github.com/safishamsi/graphify) — graph-based knowledge extraction skill (inspiration for the graph layer)
-- [Vannevar Bush's Memex (1945)](https://en.wikipedia.org/wiki/Memex) — the original vision this resembles
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=SamurAIGPT/llm-wiki-agent&type=Date)](https://star-history.com/#SamurAIGPT/llm-wiki-agent&Date)
+---
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+MIT — see [`LICENSE`](LICENSE). Inherits from upstream.
+
+## Credits
+
+- [SamurAIGPT/llm-wiki-agent](https://github.com/SamurAIGPT/llm-wiki-agent) — direct upstream this fork descends from.
+- [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki) — the original Tauri desktop app that inspired the whole approach.

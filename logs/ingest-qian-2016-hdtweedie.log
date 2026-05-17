@@ -1,0 +1,48 @@
+
+Ingesting: qian-2016-hdtweedie.md  (hash: dd342dd500724d40)
+  calling API (model: ...)
+  wrote: wiki/sources/qian-2016-hdtweedie.md
+  wrote: wiki/entities/WeiQian.md
+  wrote: wiki/entities/YiYang.md
+  wrote: wiki/entities/HuiZou.md
+  wrote: wiki/concepts/GroupedElasticNet.md
+  wrote: wiki/concepts/BlockwiseMajorizationDescent.md
+  wrote: wiki/concepts/IterativelyReweightedLeastSquare.md
+  wrote: wiki/overview.md
+  wrote: wiki/index.md
+  wrote: wiki/log.md
+
+==================================================
+  ✅ Ingested: Tweedie's Compound Poisson Model With Grouped Elastic Net
+==================================================
+  Created : 7 pages
+           + wiki/sources/qian-2016-hdtweedie.md
+           + wiki/entities/WeiQian.md
+           + wiki/entities/YiYang.md
+           + wiki/entities/HuiZou.md
+           + wiki/concepts/GroupedElasticNet.md
+           + wiki/concepts/BlockwiseMajorizationDescent.md
+           + wiki/concepts/IterativelyReweightedLeastSquare.md
+  Updated : 3 pages
+           ~ wiki/index.md
+           ~ wiki/log.md
+           ~ wiki/overview.md
+  ⚠️  Broken links: 10
+           wiki/sources/qian-2016-hdtweedie.md → [[Grouped Elastic Net]]
+           wiki/sources/qian-2016-hdtweedie.md → [[Tweedie's Compound Poisson Model]]
+           wiki/sources/qian-2016-hdtweedie.md → [[Generalized Linear Model]]
+           wiki/sources/qian-2016-hdtweedie.md → [[R (programming language)]]
+           wiki/sources/qian-2016-hdtweedie.md → [[Blockwise Majorization Descent]]
+           wiki/sources/qian-2016-hdtweedie.md → [[Iteratively Reweighted Least Square]]
+           wiki/sources/qian-2016-hdtweedie.md → [[Grouped Elastic Net]]
+           wiki/sources/qian-2016-hdtweedie.md → [[Iteratively Reweighted Least Square]]
+           wiki/sources/qian-2016-hdtweedie.md → [[Tweedie Distribution]]
+           wiki/sources/qian-2016-hdtweedie.md → [[Insurance]]
+  ⚠️  Not in index.md: 6
+           wiki/entities/WeiQian.md
+           wiki/entities/YiYang.md
+           wiki/entities/HuiZou.md
+           wiki/concepts/GroupedElasticNet.md
+           wiki/concepts/BlockwiseMajorizationDescent.md
+           wiki/concepts/IterativelyReweightedLeastSquare.md
+

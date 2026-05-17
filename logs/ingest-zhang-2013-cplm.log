@@ -1,0 +1,43 @@
+
+Ingesting: zhang-2013-cplm.md  (hash: 12b1544b11bfd48e)
+  calling API (model: ...)
+  wrote: wiki/sources/zhang-2013-tweedie-mixed-models.md
+  wrote: wiki/concepts/TweedieDistribution.md
+  wrote: wiki/concepts/MonteCarloEM.md
+  wrote: wiki/concepts/MarkovChainMonteCarlo.md
+  wrote: wiki/concepts/LaplaceApproximation.md
+  wrote: wiki/overview.md
+  wrote: wiki/index.md
+  wrote: wiki/log.md
+
+==================================================
+  ✅ Ingested: Likelihood-based and Bayesian Methods for Tweedie Compound Poisson Linear Mixed Models
+==================================================
+  Created : 5 pages
+           + wiki/sources/zhang-2013-tweedie-mixed-models.md
+           + wiki/concepts/TweedieDistribution.md
+           + wiki/concepts/MonteCarloEM.md
+           + wiki/concepts/MarkovChainMonteCarlo.md
+           + wiki/concepts/LaplaceApproximation.md
+  Updated : 3 pages
+           ~ wiki/index.md
+           ~ wiki/log.md
+           ~ wiki/overview.md
+  ⚠️  Broken links: 21
+           wiki/sources/zhang-2013-tweedie-mixed-models.md → [[Tweedie Distribution]]
+           wiki/sources/zhang-2013-tweedie-mixed-models.md → [[Markov Chain Monte Carlo]]
+           wiki/sources/zhang-2013-tweedie-mixed-models.md → [[Tweedie Distribution]]
+           wiki/sources/zhang-2013-tweedie-mixed-models.md → [[Monte Carlo EM]]
+           wiki/sources/zhang-2013-tweedie-mixed-models.md → [[MCMC]]
+           wiki/sources/zhang-2013-tweedie-mixed-models.md → [[Laplace Approximation]]
+           wiki/sources/zhang-2013-tweedie-mixed-models.md → [[Adaptive Gauss-Hermite Quadrature]]
+           wiki/concepts/TweedieDistribution.md → [[Generalized Linear Models]]
+           wiki/concepts/TweedieDistribution.md → [[Generalized Linear Models]]
+           wiki/concepts/TweedieDistribution.md → [[Generalized Linear Models]]
+           ... and 11 more
+  ⚠️  Not in index.md: 4
+           wiki/concepts/TweedieDistribution.md
+           wiki/concepts/MonteCarloEM.md
+           wiki/concepts/MarkovChainMonteCarlo.md
+           wiki/concepts/LaplaceApproximation.md
+

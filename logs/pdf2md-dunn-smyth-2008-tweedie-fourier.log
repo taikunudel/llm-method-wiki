@@ -1,0 +1,14 @@
+
+pdf2md — LLM Wiki Agent
+  Input:   /Users/passwork12345/Downloads/papers/dunn_smyth_2008_tweedie_density_fourier_inversion.pdf
+  Output:  raw/papers/dunn-smyth-2008-tweedie-fourier.md
+  Backend: pymupdf4llm
+
+=== Document parser messages ===
+Using Tesseract for OCR processing.
+
+  ✓ Converted dunn_smyth_2008_tweedie_density_fourier_inversion.pdf → raw/papers/dunn-smyth-2008-tweedie-fourier.md
+
+Done. Now ingest with:
+  python tools/ingest.py raw/papers/dunn-smyth-2008-tweedie-fourier.md
+  — or in your agent: ingest raw/papers/dunn-smyth-2008-tweedie-fourier.md

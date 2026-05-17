@@ -1,0 +1,56 @@
+
+Ingesting: delong-lindholm-wuthrich-2021-tweedie.md  (hash: b7bb76eb64b3ce5a)
+  calling API (model: ...)
+  wrote: wiki/sources/delong-lindholm-wuthrich-2021-tweedie.md
+  wrote: wiki/entities/LukaszDelong.md
+  wrote: wiki/entities/MathiasLindholm.md
+  wrote: wiki/entities/MarioVWuthrich.md
+  wrote: wiki/concepts/TweedieDistribution.md
+  wrote: wiki/concepts/PoissonGamma.md
+  wrote: wiki/concepts/GeneralizedLinearModels.md
+  wrote: wiki/concepts/NeuralNetworks.md
+  wrote: wiki/overview.md
+  wrote: wiki/index.md
+  wrote: wiki/log.md
+
+  ⚠️  Contradictions detected:
+     - Some claims about the superiority of traditional GLM methods over Tweedie’s model in computational efficiency are contradicted by the evidence presented.
+
+==================================================
+  ✅ Ingested: Making Tweedie’s Compound Poisson Model More Accessible
+==================================================
+  Created : 8 pages
+           + wiki/sources/delong-lindholm-wuthrich-2021-tweedie.md
+           + wiki/entities/LukaszDelong.md
+           + wiki/entities/MathiasLindholm.md
+           + wiki/entities/MarioVWuthrich.md
+           + wiki/concepts/TweedieDistribution.md
+           + wiki/concepts/PoissonGamma.md
+           + wiki/concepts/GeneralizedLinearModels.md
+           + wiki/concepts/NeuralNetworks.md
+  Updated : 3 pages
+           ~ wiki/index.md
+           ~ wiki/log.md
+           ~ wiki/overview.md
+  Warnings: 1 contradiction(s)
+  ⚠️  Broken links: 16
+           wiki/sources/delong-lindholm-wuthrich-2021-tweedie.md → [[Tweedie's Compound Poisson Model]]
+           wiki/sources/delong-lindholm-wuthrich-2021-tweedie.md → [[Poisson-Gamma]]
+           wiki/sources/delong-lindholm-wuthrich-2021-tweedie.md → [[Neural Networks]]
+           wiki/sources/delong-lindholm-wuthrich-2021-tweedie.md → [[Tweedie Distribution]]
+           wiki/sources/delong-lindholm-wuthrich-2021-tweedie.md → [[Poisson-Gamma]]
+           wiki/sources/delong-lindholm-wuthrich-2021-tweedie.md → [[Generalized Linear Models (GLM)]]
+           wiki/sources/delong-lindholm-wuthrich-2021-tweedie.md → [[Neural Networks]]
+           wiki/entities/LukaszDelong.md → [[insurance]]
+           wiki/entities/LukaszDelong.md → [[Tweedie distributions]]
+           wiki/entities/MathiasLindholm.md → [[Tweedie's Compound Poisson Model]]
+           ... and 6 more
+  ⚠️  Not in index.md: 7
+           wiki/entities/LukaszDelong.md
+           wiki/entities/MathiasLindholm.md
+           wiki/entities/MarioVWuthrich.md
+           wiki/concepts/TweedieDistribution.md
+           wiki/concepts/PoissonGamma.md
+           wiki/concepts/GeneralizedLinearModels.md
+           wiki/concepts/NeuralNetworks.md
+

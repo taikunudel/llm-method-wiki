@@ -1,0 +1,15 @@
+
+pdf2md — LLM Wiki Agent
+  Input:   /Users/passwork12345/Downloads/papers/wood_2011_gam_reml_marginal_likelihood.pdf
+  Output:  raw/papers/wood-2011-gam-reml.md
+  Backend: pymupdf4llm
+
+=== Document parser messages ===
+Using Tesseract for OCR processing.
+OCR on page.number=19/20.
+
+  ✓ Converted wood_2011_gam_reml_marginal_likelihood.pdf → raw/papers/wood-2011-gam-reml.md
+
+Done. Now ingest with:
+  python tools/ingest.py raw/papers/wood-2011-gam-reml.md
+  — or in your agent: ingest raw/papers/wood-2011-gam-reml.md
