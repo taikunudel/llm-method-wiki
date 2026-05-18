@@ -32,34 +32,52 @@ git clone https://github.com/taikunudel/llm-method-wiki llm-wiki-agent
 **Step 2.** Tell your agent the wiki exists by pasting this block into your workspace's `AGENTS.md` (and/or `CLAUDE.md`, `GEMINI.md` — whichever your harness loads). Drop it anywhere near the top:
 
 ```markdown
-## 📚 Knowledge Base — Optional
+## 📚 Knowledge Base — Required
 
-There's a local wiki at `llm-wiki-agent/wiki/` that may have relevant
-background for your task. Layout:
+A local wiki at `llm-wiki-agent/wiki/` is part of your task context.
+You **MUST** consult it before writing modeling, statistical, or
+domain-specific code. Skipping it is not allowed.
+
+**Required pre-task steps (in this order):**
+
+1. Read `llm-wiki-agent/wiki/index.md` — the catalog of every page.
+2. For each domain term in your task, grep the wiki:
+   `grep -rli <term> llm-wiki-agent/wiki/`.
+3. Read every matching page under `wiki/sources/`, `wiki/concepts/`,
+   and `wiki/examples/`.
+4. Before invoking any package call that has a corresponding wiki
+   page, read that page's `Argument Quirks` / `Failure Modes` /
+   `Code Example` sections.
+
+**Citation is mandatory:**
+
+- Every modeling or domain decision MUST cite the wiki page(s) that
+  support it via `[[PageName]]` in code comments AND in your
+  trajectory's `cites` array.
+- Empty `cites` on a substantive decision = task failure.
+- Prefer `wiki/examples/*.R` snippets — copy verbatim, then modify.
+  Don't regenerate from training memory when an example exists.
+
+**If the wiki has nothing relevant:** log a `gap_surfaced` event
+(see Task Trajectory below) and proceed, citing "no wiki support" —
+but only after you've actually checked.
+
+**Layout (so you know where to look):**
 
 - `index.md`   — one-line catalog of every page (start here)
 - `overview.md` — current synthesis across all sources
 - `sources/`   — per-document summaries
-- `concepts/`  — ideas, methods, frameworks
+- `concepts/`  — methods, frameworks, distributions
 - `entities/`  — people, packages, organizations
-- `examples/`  — runnable snippets, if any exist for the topic
+- `examples/`  — runnable snippets per method
 
-**Why a glance can be worth it:** the wiki tends to capture
-package-specific gotchas, paper-recommended hyperparameters, and silent-
-failure modes that often aren't in your training data. When it's
-relevant, skipping it can cost more debugging time than reading it
-would.
-
-**Cost is low:** the wiki is small — `index.md` is typically under 100
-lines. Scanning the catalog takes seconds.
-
-Use it when useful, ignore it otherwise. Contents change over time, so
-don't assume what's in there — check `index.md` if you think it might
-help. If you do use a page, a `[[PageName]]` reference in code comments
-or in your trajectory makes the work easier to retrace.
+The wiki captures package-specific gotchas, paper-recommended
+hyperparameters, and silent-failure modes that aren't in your training
+data. Reading it is the difference between "code that runs" and "code
+that runs correctly." This is not optional.
 ```
 
-That's it. The next session your agent loads `AGENTS.md`, it will know the wiki is there, where to find the catalog, and how to cite pages back. The block is *advisory* — the agent decides whether to consult it based on task relevance.
+That's it. The next session your agent loads `AGENTS.md`, it will know the wiki is required reading, where to find the catalog, and that citations are mandatory. The block is **prescriptive** — the agent must consult the wiki for any modeling, statistical, or domain task.
 
 **Optional Step 3 — trajectory logging for audit:** if you want to later audit *whether* the agent used the wiki, also paste the `## 📋 Task Trajectory — Log What You Do` section below into the same `AGENTS.md`. It tells the agent to write JSON events to `audit/trajectories/<task-id>.jsonl` as it works. See `audit/` design notes (not in this repo yet — a future addition).
 
