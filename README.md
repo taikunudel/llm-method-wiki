@@ -1,22 +1,40 @@
 # llm-method-wiki
 
-**Structured knowledge that a coding agent can actually use when writing model code — not just read for context.**
+> **A method-aware knowledge base that coding agents consult *before* writing model code — not a summary wiki they read for context.**
 
-Drop research papers (or any source documents) into `raw/`. Claude Code reads them through a method-aware schema that captures the things agents normally hallucinate: exact API signatures, paper-recommended hyperparameters, argument quirks, silent-failure modes, and a runnable snippet. The wiki becomes a reference the agent consults *before* writing code.
+## At a glance
+
+| You do | Claude Code does | The agent later does |
+|---|---|---|
+| Drop a paper into `raw/` | Builds a structured wiki page — `Canonical API`, `Argument Quirks`, `Failure Modes`, runnable snippet | Reads the page before writing model code, cites it, copies the snippet |
+| Run `/wiki-query <question>` | Synthesizes an answer with `[[Page]]` citations | Treats the answer as a sourced memo, not a paraphrase from training memory |
+| Run `/wiki-lint` periodically | Reports contradictions, orphans, missing snippets, gaps | Surfaces gaps when the wiki can't support a decision |
+| Run `/wiki-graph` | Builds an interactive cross-link graph at `graph/graph.html` | — |
+
+## How it flows
+
+```mermaid
+flowchart LR
+    A[Source document<br/>in raw/] --> B[Claude Code<br/>+ method-aware schema]
+    B --> C[Wiki page<br/>Canonical API · Key Hyperparameters<br/>Argument Quirks · Failure Modes<br/>Domain Pitfalls · Verified Snippet]
+    D[Modeling task<br/>given to agent] --> E[Agent reads<br/>relevant wiki pages]
+    C ==> E
+    E --> F[Code cites the page<br/>and uses the snippet]
+```
 
 ## Why this exists
 
-LLM coding agents are confidently wrong in predictable ways: they fabricate function arguments, default to library defaults instead of paper-recommended ones, miss silent-failure modes, and forget exposure/offset handling for domain code. A generic summary wiki doesn't fix this — a summary of a method paper is no more useful at call time than the agent's training memory.
+LLM coding agents are confidently wrong in predictable ways. A summary wiki doesn't fix the failure — only operational detail does:
 
-This project's templates force every method-paper page to answer the operational questions:
+| What agents get wrong | What this wiki captures |
+|---|---|
+| Fabricated function arguments | The exact `Canonical API` call from the paper or package docs |
+| Library defaults that disagree with paper recommendations | A `Key Hyperparameters` table with paper-recommended values and sensible grids |
+| Silent failures (unseen factor levels, `s = "lambda.min"` omitted, …) | `Argument Quirks` + `Failure Modes` sections, per page |
+| Missing exposure / offset handling | A `Domain Pitfalls` section capturing knowledge the paper assumes but never states |
+| Regenerating call sites from training memory | A `[[examples/<slug>]]` wikilink to a verified end-to-end snippet |
 
-- What does the canonical call actually look like?
-- Which arguments have non-obvious defaults?
-- What silently fails?
-- What domain knowledge does the paper assume but never state?
-- Where is the verified, runnable snippet?
-
-When an agent then writes modeling code, it reads the wiki first, cites the page, and prefers copying the verified snippet over regenerating from training memory.
+At coding time the workflow becomes: **read the wiki → cite the page → prefer copying the snippet → log a gap event when the wiki can't support a decision**.
 
 ## What a wiki page looks like
 
@@ -121,7 +139,19 @@ git checkout wiki/index.md wiki/log.md wiki/overview.md
 
 ## Using with other agents (openclaw, Codex, Gemini)
 
-The schema files are deliberately mirrored across `CLAUDE.md`, `AGENTS.md`, and `GEMINI.md` so the same wiki works under any agent harness. To make a sibling agent treat this wiki as required reading:
+The schema files are mirrored across three filenames so the same wiki works under any harness:
+
+| Harness | Schema file it loads on session start |
+|---|---|
+| Claude Code | `CLAUDE.md` |
+| Codex / OpenCode / any AGENTS.md-aware harness | `AGENTS.md` |
+| Gemini CLI | `GEMINI.md` |
+
+All three files carry identical content. To make a sibling agent treat this wiki as required reading:
+
+1. Clone this repo into the agent's workspace (next to the project the agent works on).
+2. Paste the **Knowledge Base** block (below) into the workspace's own schema file.
+3. *(Optional)* Paste the **Task Trajectory** block to enable audit logging of which wiki pages the agent actually read.
 
 <details>
 <summary>Integration block — paste into your workspace's <code>AGENTS.md</code> (click to expand)</summary>
@@ -237,7 +267,21 @@ fabrications are detectable. Be complete — it's cheaper than getting caught.
 
 ## Credits & lineage
 
-This is a method-aware fork of [SamurAIGPT/llm-wiki-agent](https://github.com/SamurAIGPT/llm-wiki-agent), which itself derives from [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki). The "drop sources in, get a wiki" idea is theirs; this fork's contribution is the schema redesign for operational knowledge, the seeded corpus, and three-agent compatibility. The original upstream README is preserved as [`README-UPSTREAM.md`](README-UPSTREAM.md).
+| Project | Role |
+|---|---|
+| [SamurAIGPT/llm-wiki-agent](https://github.com/SamurAIGPT/llm-wiki-agent) | Direct upstream this fork descends from |
+| [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki) | Original Tauri desktop app that inspired the approach |
+
+**What this fork adds on top:**
+
+- Method-aware schema (`Canonical API`, `Key Hyperparameters`, `Argument Quirks`, `Failure Modes`, `Domain Pitfalls`).
+- Concept-page template variants — `Method/Software`, `Domain`, `Diagnostic`.
+- `wiki/examples/` directory of verified runnable snippets, one per method.
+- Side-by-side `wiki/` vs `wiki-naive/` so you can `diff` the new vs. old schema on the same sources.
+- Three-agent compatibility via mirrored `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.
+- Domain-specific source templates (Diary / Journal, Meeting Notes) alongside the generic one.
+
+The original upstream README is preserved as [`README-UPSTREAM.md`](README-UPSTREAM.md).
 
 ## License
 
