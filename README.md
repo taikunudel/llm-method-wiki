@@ -1,35 +1,141 @@
 # llm-method-wiki
 
-A method-aware fork of [SamurAIGPT/llm-wiki-agent](https://github.com/SamurAIGPT/llm-wiki-agent) (which itself derives from [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki)) — same "drop sources in, get a wiki" idea, but the templates capture **operational** knowledge (canonical API calls, paper-recommended hyperparameters, argument quirks, silent-failure modes, runnable code examples) instead of just summaries. Built so a coding agent can actually *use* the wiki when writing model code, not merely read it for context.
+**Structured knowledge that a coding agent can actually use when writing model code — not just read for context.**
 
-The shipped wiki seeds the knowledge base with 8 auto-insurance / Tweedie modeling papers and 8 runnable R snippets — useful as a starting corpus or just as a worked example of what the schema produces.
+Drop research papers (or any source documents) into `raw/`. Claude Code reads them through a method-aware schema that captures the things agents normally hallucinate: exact API signatures, paper-recommended hyperparameters, argument quirks, silent-failure modes, and a runnable snippet. The wiki becomes a reference the agent consults *before* writing code.
 
-## What's different from upstream
+## Why this exists
 
-- **Method-paper template** — every source page tagged `method`/`software` has required sections: `Canonical API`, `Key Hyperparameters`, `Argument Quirks`, `Failure Modes`, `Code Example`, `Domain Pitfalls`.
-- **Concept-page template variants** — `Method/Software Concept` vs `Domain Concept`, each with its own required sections (originals were free-form).
-- **`wiki/examples/` directory** — one runnable snippet per method, written to compile end-to-end against a canonical dataset. Agents are encouraged to copy verbatim, then modify.
-- **`wiki-naive/`** — the pre-regen state preserved side-by-side so you can `diff` what the method-aware schema produced versus the naive schema on the *same* sources.
-- **Three-agent compatibility** — `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` carry identical schema content, so Claude Code, Codex/OpenCode, and Gemini CLI all read the same rules.
-- **Domain-specific source templates** — Diary/Journal and Meeting Notes, alongside the generic source template.
-- **9 standalone Python tools** in `tools/`: `build_graph.py`, `file_to_md.py`, `heal.py`, `health.py`, `ingest.py`, `lint.py`, `pdf2md.py`, `query.py`, `refresh.py`.
+LLM coding agents are confidently wrong in predictable ways: they fabricate function arguments, default to library defaults instead of paper-recommended ones, miss silent-failure modes, and forget exposure/offset handling for domain code. A generic summary wiki doesn't fix this — a summary of a method paper is no more useful at call time than the agent's training memory.
 
-Original upstream README preserved as [`README-UPSTREAM.md`](README-UPSTREAM.md).
+This project's templates force every method-paper page to answer the operational questions:
 
+- What does the canonical call actually look like?
+- Which arguments have non-obvious defaults?
+- What silently fails?
+- What domain knowledge does the paper assume but never state?
+- Where is the verified, runnable snippet?
+
+When an agent then writes modeling code, it reads the wiki first, cites the page, and prefers copying the verified snippet over regenerating from training memory.
+
+## What a wiki page looks like
+
+A real page from the seeded corpus — [`wiki/sources/qian-2016-hdtweedie.md`](wiki/sources/qian-2016-hdtweedie.md), truncated for the README:
+
+```markdown
+---
+title: "Tweedie's Compound Poisson Model With Grouped Elastic Net"
+type: source
+tags: [method, HDtweedie, tweedie, regularization, insurance]
 ---
 
-## Setup — using this with openclaw (or any agent that reads `AGENTS.md`)
+## Canonical API
+​```R
+cv_fit <- cv.HDtweedie(
+  x      = x_train,    # numeric matrix, NO intercept, NO factor columns
+  y      = y_train,
+  group  = group_vec,  # one block per categorical (all dummies together)
+  p      = 1.5,
+  alpha  = 0.7,        # 1 = grouped lasso, 0 = grouped ridge
+  nfolds = 5
+)
+y_hat <- predict(cv_fit, newx = x_test, s = "lambda.min", type = "response")
+​```
 
-**Step 1.** Clone this repo into your openclaw workspace so the wiki sits next to your work:
+## Argument Quirks
+- `x` must be a numeric matrix with no intercept column — cv.HDtweedie adds it.
+- Factor columns are not accepted; pre-expand with `model.matrix(~ . - 1)`.
+- `predict()` silently returns an all-lambda matrix when `s` is omitted.
+  Always pass `s = "lambda.min"`.
+
+## Failure Modes
+- Silent crash when test set has factor levels unseen in train.
+- Convergence failure when p is too close to 1 or 2 — keep in (1.05, 1.95).
+- Cross-validation unstable when >95% of responses are zero.
+
+## Domain Pitfalls
+- Group construction is the most common error: for a K-level categorical,
+  group ALL K-1 dummies in one block, not each dummy separately.
+- Exposure: pass via `weights`; the package does not parse offsets in formulas.
+```
+
+That's the shape every `[method]`/`[software]` source page takes. The full template (with `Key Hyperparameters` table, `Code Example` wikilink, `Connections`) is in [CLAUDE.md](CLAUDE.md).
+
+## Quickstart (Claude Code)
+
+```bash
+git clone https://github.com/taikunudel/llm-method-wiki
+cd llm-method-wiki
+claude   # opens Claude Code in this directory
+```
+
+In Claude Code:
+
+1. Drop a source document into `raw/` (Markdown ingested directly; PDFs, .docx, .pptx, .html, etc. auto-convert via [markitdown](https://github.com/microsoft/markitdown)).
+2. Say *"ingest raw/your-file.md"* — Claude builds the source page, updates `index.md`, creates any new concept/entity pages, and logs the ingest.
+3. Ask the wiki anything: *"What does the wiki say about Tweedie variance power?"*
+4. Build the cross-link graph: *"build the knowledge graph"* — produces an interactive `graph/graph.html`.
+5. Periodically: *"lint the wiki"* (semantic checks) and *"health"* (fast structural checks).
+
+No API key or Python script needed for the wiki itself — Claude Code reads [CLAUDE.md](CLAUDE.md) automatically and follows the workflows. The Python tools under `tools/` are optional accelerators (graph builder, health checker, etc.).
+
+## Slash commands
+
+| Command | What it does | Plain-English form |
+|---|---|---|
+| [`/wiki-ingest`](.claude/commands/wiki-ingest.md) | Process a file from `raw/` into the wiki | *"ingest raw/my-paper.md"* |
+| [`/wiki-query`](.claude/commands/wiki-query.md) | Answer a question with citations | *"what does the wiki say about X?"* |
+| [`/wiki-lint`](.claude/commands/wiki-lint.md) | Quality audit (orphans, contradictions, gaps) | *"lint the wiki"* |
+| [`/wiki-graph`](.claude/commands/wiki-graph.md) | Build interactive `[[wikilink]]` graph | *"build the graph"* |
+
+See [`.claude/commands/`](.claude/commands/) for the command definitions, and [CLAUDE.md](CLAUDE.md) for the full workflows each one invokes.
+
+## Repo layout
+
+| Path | What's there |
+|---|---|
+| `raw/` | Immutable source documents (papers, articles, notes). Never edited by the agent. |
+| `wiki/` | The generated knowledge base — `index.md`, `overview.md`, `sources/`, `concepts/`, `entities/`, `examples/`, `syntheses/`, `log.md`. |
+| `wiki-naive/` | Pre-regenerated state under the original (non-method-aware) schema, kept side-by-side so you can `diff` what the new templates produce on the same sources. |
+| `examples/` | Demo corpora (e.g. `cjk-showcase/`). |
+| `tools/` | Optional Python utilities — `build_graph.py`, `health.py`, `lint.py`, `ingest.py`, `query.py`, `heal.py`, `refresh.py`, `pdf2md.py`, `file_to_md.py`. |
+| `.claude/commands/` | Claude Code slash-command definitions (`/wiki-*`). |
+| `CLAUDE.md` / `AGENTS.md` / `GEMINI.md` | Identical schema/workflow instructions, read automatically by Claude Code, Codex/OpenCode, and Gemini CLI respectively. |
+| `docs/` | Design notes and additional documentation. |
+
+## What's seeded in the wiki
+
+The `wiki/` ships pre-populated with the auto-insurance / Tweedie modeling corpus used to develop this fork — useful both as a starting knowledge base and as a worked example of what the schema produces on real method papers:
+
+- **8 source papers** — Smyth-Jorgensen (2002), Dunn-Smyth (2008), Frees-Meyers-Cummings (2011), Wood (2011), Zhang (2013), Qian-Yang-Zou (2016), Yang-Qian-Zou (2016), Delong-Lindholm-Wüthrich (2021).
+- **8 runnable R examples** in `wiki/examples/` — one per method, each calling its package against `cplm::AutoClaim`.
+- **17 concept pages** — Tweedie distribution, GLM, GAM, gradient boosting, grouped elastic net, Gini index, adverse selection, etc.
+- **14 entity pages** — authors and R packages.
+
+To start with the schema only (no seed content):
+
+```bash
+rm -rf wiki/* raw/papers/*
+git checkout wiki/index.md wiki/log.md wiki/overview.md
+```
+
+## Using with other agents (openclaw, Codex, Gemini)
+
+The schema files are deliberately mirrored across `CLAUDE.md`, `AGENTS.md`, and `GEMINI.md` so the same wiki works under any agent harness. To make a sibling agent treat this wiki as required reading:
+
+<details>
+<summary>Integration block — paste into your workspace's <code>AGENTS.md</code> (click to expand)</summary>
+
+Clone the repo into your agent's workspace so the wiki sits next to your work:
 
 ```bash
 cd ~/.openclaw/workspace          # or wherever your agent's workspace lives
 git clone https://github.com/taikunudel/llm-method-wiki llm-wiki-agent
 ```
 
-(The folder name `llm-wiki-agent` is what the schema and the snippet below expect. If you prefer another name, change every `llm-wiki-agent/` path in the snippet to match.)
+(The folder name `llm-wiki-agent` is what the snippet below expects. If you prefer another name, change every `llm-wiki-agent/` path to match.)
 
-**Step 2.** Tell your agent the wiki exists by pasting this block into your workspace's `AGENTS.md` (and/or `CLAUDE.md`, `GEMINI.md` — whichever your harness loads). Drop it anywhere near the top:
+Then paste this block into the workspace's `AGENTS.md` (and/or `CLAUDE.md`, `GEMINI.md` — whichever your harness loads), anywhere near the top:
 
 ```markdown
 ## 📚 Knowledge Base — Required
@@ -77,12 +183,14 @@ data. Reading it is the difference between "code that runs" and "code
 that runs correctly." This is not optional.
 ```
 
-That's it. The next session your agent loads `AGENTS.md`, it will know the wiki is required reading, where to find the catalog, and that citations are mandatory. The block is **prescriptive** — the agent must consult the wiki for any modeling, statistical, or domain task.
+The next session your agent loads `AGENTS.md`, it will know the wiki is required reading, where to find the catalog, and that citations are mandatory.
 
-**Optional Step 3 — trajectory logging for audit:** if you want to later audit *whether* the agent used the wiki, also paste the `## 📋 Task Trajectory — Log What You Do` section below into the same `AGENTS.md`. It tells the agent to write JSON events to `audit/trajectories/<task-id>.jsonl` as it works. See `audit/` design notes (not in this repo yet — a future addition).
+</details>
 
 <details>
-<summary>Trajectory block (optional, click to expand)</summary>
+<summary>Optional: trajectory logging for audit (click to expand)</summary>
+
+If you want to later audit *whether* the agent used the wiki, also paste this `## 📋 Task Trajectory` block into the same `AGENTS.md`. It tells the agent to write JSON events to `audit/trajectories/<task-id>.jsonl` as it works.
 
 ```markdown
 ## 📋 Task Trajectory — Log What You Do
@@ -127,26 +235,10 @@ fabrications are detectable. Be complete — it's cheaper than getting caught.
 
 </details>
 
----
+## Credits & lineage
 
-## What's seeded in the wiki
-
-The `wiki/` ships pre-populated with the auto-insurance / Tweedie corpus used to develop this fork:
-
-- **8 source papers** — Smyth-Jorgensen (2002), Dunn-Smyth (2008), Frees-Meyers-Cummings (2011), Wood (2011), Zhang (2013), Qian-Yang-Zou (2016), Yang-Qian-Zou (2016), Delong-Lindholm-Wüthrich (2021).
-- **8 runnable R examples** in `wiki/examples/` — one per method, each calling its package against `cplm::AutoClaim`.
-- **17 concept pages** — Tweedie distribution, GLM, GAM, gradient boosting, grouped elastic net, Gini index, adverse selection, etc.
-- **14 entity pages** — authors and R packages.
-
-Delete or replace the seed content if you only want the schema; it's small (~150 KB) and easily removed with `rm -rf wiki/* raw/papers/* && git checkout wiki/index.md wiki/log.md wiki/overview.md`.
-
----
+This is a method-aware fork of [SamurAIGPT/llm-wiki-agent](https://github.com/SamurAIGPT/llm-wiki-agent), which itself derives from [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki). The "drop sources in, get a wiki" idea is theirs; this fork's contribution is the schema redesign for operational knowledge, the seeded corpus, and three-agent compatibility. The original upstream README is preserved as [`README-UPSTREAM.md`](README-UPSTREAM.md).
 
 ## License
 
 MIT — see [`LICENSE`](LICENSE). Inherits from upstream.
-
-## Credits
-
-- [SamurAIGPT/llm-wiki-agent](https://github.com/SamurAIGPT/llm-wiki-agent) — direct upstream this fork descends from.
-- [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki) — the original Tauri desktop app that inspired the whole approach.

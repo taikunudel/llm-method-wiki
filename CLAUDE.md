@@ -1,6 +1,10 @@
 # LLM Wiki Agent — Schema & Workflow Instructions
 
-This wiki is maintained entirely by Claude Code. No API key or Python scripts needed — just open this repo in Claude Code and talk to it.
+This file is read automatically by Claude Code on every session in this repository. It defines the schema and workflows that turn source documents in `raw/` into structured wiki pages under `wiki/` — ingest, query, lint, health, and graph. The four `/wiki-*` slash commands in [`.claude/commands/`](.claude/commands/) are thin invocations of the workflows below.
+
+The wiki is maintained entirely by Claude Code. No API key or Python scripts are needed for the core workflow — just open this repo in Claude Code and talk to it. The Python scripts under `tools/` are optional accelerators (graph building, structural health checks).
+
+**New here?** Read the [README](README.md) first for project context, a quickstart, and an example of what a finished wiki page looks like. This file is the reference for *how* pages get built; the README is the reference for *why*.
 
 ## Slash Commands (Claude Code)
 

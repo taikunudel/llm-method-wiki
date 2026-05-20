@@ -1,14 +1,20 @@
-Query the LLM Wiki and synthesize an answer.
+# /wiki-query
 
-Usage: /wiki-query $ARGUMENTS
+**What it does:** Answers a question against the wiki and synthesizes a response with `[[PageName]]` citations to the pages it drew from.
 
-$ARGUMENTS is the question to answer, e.g. `What are the main themes across all sources?`
+**When to use it:** Any time you want a wiki-grounded answer — what does the wiki say about X, what are the trade-offs between Y and Z, what are the common pitfalls of method W.
 
-Follow the Query Workflow defined in CLAUDE.md:
-1. Read wiki/index.md to identify the most relevant pages
-2. Read those pages (up to ~10 most relevant)
-3. Synthesize a thorough markdown answer with [[PageName]] wikilink citations
-4. Include a ## Sources section at the end listing pages you drew from
-5. Ask the user if they want the answer saved as wiki/syntheses/<slug>.md
+**Usage:** `/wiki-query <question>` — e.g. `/wiki-query what are the failure modes of HDtweedie?`
 
-If the wiki is empty, say so and suggest running /wiki-ingest first.
+---
+
+Follow the Query Workflow defined in [CLAUDE.md](../../CLAUDE.md):
+
+1. Read `wiki/index.md` to identify the most relevant pages.
+2. Grep the question for any token matching a filename under `wiki/concepts/`, `wiki/entities/`, or `wiki/examples/` — read every match. (Index summaries are lossy by design.)
+3. Read those pages with the Read tool (up to ~10 most relevant).
+4. Synthesize a thorough markdown answer with `[[PageName]]` wikilink citations inline.
+5. Include a `## Sources` section at the end listing the pages drawn from.
+6. Ask the user if they want the answer saved as `wiki/syntheses/<slug>.md`.
+
+If the wiki is empty, say so and suggest running `/wiki-ingest` first.
