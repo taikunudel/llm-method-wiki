@@ -36,6 +36,18 @@ LLM coding agents are confidently wrong in predictable ways. A summary wiki does
 
 At coding time the workflow becomes: **read the wiki → cite the page → prefer copying the snippet → log a gap event when the wiki can't support a decision**.
 
+## How it differs from RAG
+
+This is not retrieval-augmented generation. RAG re-derives knowledge from raw chunks on every query; this compiles knowledge once into structured pages and keeps them current.
+
+| RAG | llm-method-wiki |
+|---|---|
+| Re-derives knowledge every query | Compiles once, keeps current |
+| Raw chunks as the retrieval unit | Structured wiki pages |
+| No cross-references | Cross-references pre-built as `[[wikilinks]]` |
+| Contradictions surface at query time (maybe) | Flagged at ingest time |
+| No accumulation | Every source makes the wiki richer |
+
 ## What a wiki page looks like
 
 A real page from the seeded corpus — [`wiki/sources/qian-2016-hdtweedie.md`](wiki/sources/qian-2016-hdtweedie.md), truncated for the README:
@@ -107,6 +119,151 @@ No API key or Python script needed for the wiki itself — Claude Code reads [CL
 | [`/wiki-graph`](.claude/commands/wiki-graph.md) | Build interactive `[[wikilink]]` graph | *"build the graph"* |
 
 See [`.claude/commands/`](.claude/commands/) for the command definitions, and [CLAUDE.md](CLAUDE.md) for the full workflows each one invokes.
+
+## What you get
+
+- **Persistent wiki** — structured markdown pages that accumulate across sessions. Unlike a chat, nothing is lost.
+- **Auto-created entity pages** — one per person, company, package, or project mentioned, updated each time a new source references it.
+- **Auto-created concept pages** — one per idea, method, or framework, cross-referenced to every source that discusses it.
+- **Living overview** — `wiki/overview.md` is revised on every ingest to reflect the current synthesis across everything ingested.
+- **Contradiction flags at ingest time** — when a new source conflicts with an existing claim, it's surfaced as you add it, not buried until query time.
+- **Knowledge graph** — every page a node, every `[[wikilink]]` an edge, plus inferred implicit relationships and community detection (see [The graph](#the-graph)).
+- **Lint reports** — orphan pages, broken links, missing entity pages, and data gaps with suggested sources to fill them.
+
+## Use cases
+
+The seeded corpus is actuarial, but the schema is general-purpose — any collection of sources works, and the method-aware templates are simply the flavor that kicks in for method/software papers.
+
+<details>
+<summary>Concrete workflows by domain (click to expand)</summary>
+
+### Research
+
+Going deep on a topic over weeks — papers, articles, reports.
+
+```
+/wiki-ingest raw/papers/attention-is-all-you-need.md
+/wiki-ingest raw/papers/llama2.md
+/wiki-ingest raw/papers/rag-survey.md
+
+# Entity pages (Meta AI, Google Brain) and concept pages
+# (Attention, RLHF, Context Window) are created automatically.
+
+/wiki-query "What are the main approaches to reducing hallucination?"
+/wiki-query "How has context window size evolved across models?"
+
+/wiki-lint
+# → "No sources on mixture-of-experts — consider the Mixtral paper"
+```
+
+By the end you have a structured, interlinked reference — not a folder of PDFs you'll never reopen.
+
+### Reading a book
+
+File each chapter as you go; build pages for characters, themes, arguments.
+
+```
+/wiki-ingest raw/book/chapter-01.md
+/wiki-ingest raw/book/chapter-02.md
+
+/wiki-query "How has the protagonist's motivation evolved?"
+/wiki-query "What contradictions exist in the author's argument so far?"
+
+/wiki-graph   # → graph.html shows every character/theme and how they connect
+```
+
+Think fan wikis like Tolkien Gateway — built as you read, with the agent doing the cross-referencing.
+
+### Personal knowledge base
+
+Track goals, health, habits — file journal entries, articles, podcast notes.
+
+```
+/wiki-ingest raw/journal/2026-01-week1.md
+/wiki-ingest raw/articles/huberman-sleep-protocol.md
+
+/wiki-query "What patterns show up in my journal entries about energy?"
+/wiki-query "What habits have I tried and what was the outcome?"
+```
+
+Concepts like "Sleep", "Exercise", "Deep Work" accumulate evidence from every source filed.
+
+### Business / team intelligence
+
+Feed in meeting transcripts, project docs, customer calls.
+
+```
+/wiki-ingest raw/meetings/q1-planning-transcript.md
+/wiki-ingest raw/docs/product-roadmap-2026.md
+/wiki-ingest raw/calls/customer-interview-acme.md
+
+/wiki-query "What feature requests have come up most across customer calls?"
+/wiki-lint
+# → "Project X mentioned in 5 pages but no dedicated page"
+# → "Roadmap contradicts customer interview on priority of feature Y"
+```
+
+### Competitive analysis
+
+Track a company, market, or technology over time.
+
+```
+/wiki-ingest raw/competitors/openai-announcements.md
+/wiki-ingest raw/market/ai-funding-report-q1.md
+
+/wiki-query "How do OpenAI and Anthropic differ on safety approach?"
+/wiki-query "Competitive landscape summary as of today"
+# → the agent shows the answer, then asks if you want to save it as a synthesis page
+```
+
+</details>
+
+## Multi-format ingest
+
+Drop any supported file into `raw/` and ingest it — non-markdown is auto-converted via [markitdown](https://github.com/microsoft/markitdown) at ingest time, no separate step.
+
+**Supported:** `.md` `.pdf` `.docx` `.pptx` `.xlsx` `.xls` `.html` `.htm` `.txt` `.csv` `.json` `.xml` `.rst` `.rtf` `.epub` `.ipynb` `.yaml` `.yml` `.tsv` `.wav` `.mp3`
+
+Pass `--no-convert` to skip conversion and process only `.md` files.
+
+<details>
+<summary>Higher-fidelity conversion &amp; batch imports (click to expand)</summary>
+
+For arXiv papers, `tools/pdf2md.py` gives higher-fidelity output than generic conversion:
+
+```bash
+python tools/pdf2md.py 2401.12345                       # by arXiv ID
+python tools/pdf2md.py https://arxiv.org/abs/2401.12345 # by URL
+python tools/pdf2md.py paper.pdf --backend marker        # complex multi-column PDFs
+```
+
+To pre-convert an entire directory (useful for bulk imports):
+
+```bash
+python tools/file_to_md.py --input_dir raw/imports/
+python tools/file_to_md.py --input_dir raw/imports/ --delete_source  # remove originals
+```
+
+Optional dependencies (only needed for the formats/paths you use):
+
+| Package | Install | Used for |
+|---|---|---|
+| [markitdown](https://github.com/microsoft/markitdown) | `pip install markitdown` | Auto-conversion of non-`.md` files (required for multi-format ingest) |
+| [arxiv2md](https://github.com/ryansingman/arxiv2md) | `pip install arxiv2markdown` | arXiv papers via structured source |
+| [Marker](https://github.com/VikParuchuri/marker) | `pip install marker-pdf` | Complex academic PDFs with multi-column layouts |
+| [PyMuPDF4LLM](https://github.com/pymupdf/RAG) | `pip install pymupdf4llm` | Fast PDF extraction (no GPU needed) |
+| [tqdm](https://github.com/tqdm/tqdm) | `pip install tqdm` | Progress bar for batch directory conversion |
+
+</details>
+
+## The graph
+
+`/wiki-graph` builds the knowledge graph in two passes:
+
+1. **Deterministic** — parses all `[[wikilinks]]` across wiki pages → edges tagged `EXTRACTED`.
+2. **Semantic** — Claude infers implicit relationships not captured by wikilinks → edges tagged `INFERRED` (with a confidence score) or `AMBIGUOUS`.
+
+Louvain community detection clusters nodes by topic. A SHA256 cache means only changed pages are reprocessed. Output is a self-contained `graph/graph.html` — no server, opens in any browser.
 
 ## Repo layout
 
@@ -265,6 +422,41 @@ fabrications are detectable. Be complete — it's cheaper than getting caught.
 
 </details>
 
+## Obsidian integration
+
+The wiki is designed to browse seamlessly in [Obsidian](https://obsidian.md) — the agent maintains consistent `[[wikilinks]]`, so you get a naturally growing graph in your vault.
+
+<details>
+<summary>Vault symlink pattern &amp; recommended config (click to expand)</summary>
+
+To keep the repo separate from your main vault, symlink the `wiki/` folder in:
+
+```bash
+ln -sfn ~/llm-method-wiki/wiki ~/your-obsidian-vault/wiki
+```
+
+Then write to `raw/` (or use the [Obsidian Web Clipper](https://obsidian.md/clipper)) to queue items for ingestion. If you move the repo, update the symlink or `wiki/` will appear missing in Obsidian.
+
+- **Graph View:** filter out `index.md` and `log.md` (`-file:index.md -file:log.md`) so they don't become gravity wells.
+- **Dataview:** the [Dataview](https://blacksmithgu.github.io/obsidian-dataview/) plugin can query the YAML frontmatter the agent injects (e.g. `type: source`, `tags: [diary]`).
+
+</details>
+
+## Tech stack
+
+NetworkX + Louvain + Claude + vis.js. No server, no database — everything is plain markdown files, running entirely locally.
+
+## Tips
+
+- The wiki is a plain git repo — you get version history of every page for free.
+- Query answers are shown before they're filed; say yes to save one as a synthesis page, and your explorations compound just like ingested sources.
+- The standalone Python scripts in `tools/` also run without a coding agent — the ones that call an LLM (e.g. `lint.py`, `query.py`) require `ANTHROPIC_API_KEY`, while `health.py` is deterministic and needs no key.
+
+## Related
+
+- [graphify](https://github.com/safishamsi/graphify) — graph-based knowledge-extraction skill (inspiration for the graph layer).
+- [Vannevar Bush's Memex (1945)](https://en.wikipedia.org/wiki/Memex) — the original vision this resembles.
+
 ## Credits & lineage
 
 | Project | Role |
@@ -280,8 +472,6 @@ fabrications are detectable. Be complete — it's cheaper than getting caught.
 - Side-by-side `wiki/` vs `wiki-naive/` so you can `diff` the new vs. old schema on the same sources.
 - Three-agent compatibility via mirrored `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.
 - Domain-specific source templates (Diary / Journal, Meeting Notes) alongside the generic one.
-
-The original upstream README is preserved as [`README-UPSTREAM.md`](README-UPSTREAM.md).
 
 ## License
 
