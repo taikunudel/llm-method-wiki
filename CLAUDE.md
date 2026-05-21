@@ -1,6 +1,6 @@
 # LLM Wiki Agent — Schema & Workflow Instructions
 
-This file is read automatically by Claude Code on every session in this repository. It defines the schema and workflows that turn source documents in `raw/` into structured wiki pages under `wiki/` — ingest, query, lint, health, and graph. The four `/wiki-*` slash commands in [`.claude/commands/`](.claude/commands/) are thin invocations of the workflows below.
+This file is read automatically by Claude Code on every session in this repository. It defines the schema and workflows that turn source documents in `knowledge/raw/` into structured wiki pages under `knowledge/wiki/` — ingest, query, lint, health, and graph. The four `/wiki-*` slash commands in [`.claude/commands/`](.claude/commands/) are thin invocations of the workflows below.
 
 The wiki is maintained entirely by Claude Code. No API key or Python scripts are needed for the core workflow — just open this repo in Claude Code and talk to it. The Python scripts under `tools/` are optional accelerators (graph building, structural health checks).
 
@@ -10,14 +10,14 @@ The wiki is maintained entirely by Claude Code. No API key or Python scripts are
 
 | Command | What to say |
 |---|---|
-| `/wiki-ingest` | `ingest raw/my-article.md` |
+| `/wiki-ingest` | `ingest knowledge/raw/my-article.md` |
 | `/wiki-query` | `query: what are the main themes?` |
 | `/wiki-health` | `health` (fast, every session) |
 | `/wiki-lint` | `lint the wiki` (expensive, periodic) |
 | `/wiki-graph` | `build the knowledge graph` |
 
 Or just describe what you want in plain English:
-- *"Ingest this file: raw/papers/attention-is-all-you-need.md"*
+- *"Ingest this file: knowledge/raw/papers/attention-is-all-you-need.md"*
 - *"What does the wiki say about transformer models?"*
 - *"Check the wiki for orphan pages and contradictions"*
 - *"Build the graph and show me what's connected to RAG"*
@@ -29,21 +29,25 @@ Claude Code reads this file automatically and follows the workflows below.
 ## Directory Layout
 
 ```
-raw/          # Immutable source documents — never modify these
-wiki/         # Claude owns this layer entirely
-  index.md    # Catalog of all pages — update on every ingest
-  log.md      # Append-only chronological record
-  overview.md # Living synthesis across all sources
-  sources/    # One summary page per source document
-  entities/   # People, companies, projects, products
-  concepts/   # Ideas, frameworks, methods, theories
-  syntheses/  # Saved query answers
-  examples/   # Verified runnable snippets — one file per method/software concept
-graph/        # Auto-generated graph data
-tools/        # Standalone Python scripts
-  health.py   # Structural checks (deterministic, no LLM calls)
-  lint.py     # Content quality checks (uses LLM for semantic analysis)
-  build_graph.py  # Knowledge graph generation
+knowledge/         # All knowledge-base content lives here
+  raw/             # Immutable source documents — never modify these
+  wiki/            # Claude owns this layer entirely
+    index.md       # Catalog of all pages — update on every ingest
+    log.md         # Append-only chronological record
+    overview.md    # Living synthesis across all sources
+    sources/       # One summary page per source document
+    entities/      # People, companies, projects, products
+    concepts/      # Ideas, frameworks, methods, theories
+    syntheses/     # Saved query answers
+    examples/      # Verified runnable snippets — one file per method/software concept
+  wiki-naive/      # Pre-regenerated comparison snapshot
+  graph/           # Auto-generated graph data
+  logs/            # Ingest run logs
+  examples/        # Demo corpora (e.g. cjk-showcase/)
+tools/             # Standalone Python scripts
+  health.py        # Structural checks (deterministic, no LLM calls)
+  lint.py          # Content quality checks (uses LLM for semantic analysis)
+  build_graph.py   # Knowledge graph generation
 ```
 
 ---
@@ -75,18 +79,18 @@ Triggered by: *"ingest <file>"* or `/wiki-ingest`
 Steps (in order):
 1. Read the source document fully using the Read tool (auto-convert if non-markdown)
 2. **Build wiki context** — do not write anything until you have read the existing pages this ingest will touch:
-   a. Read `wiki/index.md` and `wiki/overview.md`
-   b. Use Grep to find any token in the source that matches a filename under `wiki/concepts/` or `wiki/entities/`
+   a. Read `knowledge/wiki/index.md` and `knowledge/wiki/overview.md`
+   b. Use Grep to find any token in the source that matches a filename under `knowledge/wiki/concepts/` or `knowledge/wiki/entities/`
    c. Read each matching page in full. **Never overwrite a page you have not read.**
-3. Decide which source template applies (Generic / Diary / Meeting / **Method-Software**) and write `wiki/sources/<slug>.md`
-4. Update `wiki/index.md` — add entry under Sources section
-5. Update `wiki/overview.md` — revise synthesis if warranted
+3. Decide which source template applies (Generic / Diary / Meeting / **Method-Software**) and write `knowledge/wiki/sources/<slug>.md`
+4. Update `knowledge/wiki/index.md` — add entry under Sources section
+5. Update `knowledge/wiki/overview.md` — revise synthesis if warranted
 6. Update or create entity pages for key people, companies, projects mentioned — merge with the existing page, do not overwrite
 7. Update or create concept pages for key ideas, methods, frameworks. Pick the **Method / Software** or **Domain** concept template based on the concept's flavor. Merge with the existing page; never replace verified content with a shorter summary.
-8. **For sources tagged `[method]` or `[software]`:** write or update `wiki/examples/<slug>.R` (or `.py`) — a minimal *verified* call against the dataset the paper actually uses. If you cannot verify the snippet, stub it with a `# UNVERIFIED` header and surface this in the change summary.
+8. **For sources tagged `[method]` or `[software]`:** write or update `knowledge/wiki/examples/<slug>.R` (or `.py`) — a minimal *verified* call against the dataset the paper actually uses. If you cannot verify the snippet, stub it with a `# UNVERIFIED` header and surface this in the change summary.
 9. Flag any contradictions with existing wiki content. Each contradiction MUST cite a verbatim quote from both sides — ungrounded contradictions are forbidden.
-10. Append to `wiki/log.md`: `## [YYYY-MM-DD] ingest | <Title>`
-11. **Post-ingest validation** — check for broken `[[wikilinks]]`, verify every new method/software concept has a matching `wiki/examples/` file, verify all new pages are in `index.md`, print a change summary
+10. Append to `knowledge/wiki/log.md`: `## [YYYY-MM-DD] ingest | <Title>`
+11. **Post-ingest validation** — check for broken `[[wikilinks]]`, verify every new method/software concept has a matching `knowledge/wiki/examples/` file, verify all new pages are in `index.md`, print a change summary
 
 ### Source Page Format
 
@@ -96,7 +100,7 @@ title: "Source Title"
 type: source
 tags: []
 date: YYYY-MM-DD
-source_file: raw/...
+source_file: knowledge/raw/...
 ---
 
 ## Summary
@@ -169,7 +173,7 @@ title: "Paper Title"
 type: source
 tags: [method, <package-name>]
 date: YYYY-MM-DD
-source_file: raw/...
+source_file: knowledge/raw/...
 ---
 ## Summary
 2–4 sentence summary.
@@ -310,11 +314,11 @@ Per-fit, per-trial, before reporting results, etc.
 Triggered by: *"query: <question>"* or `/wiki-query`
 
 Steps:
-1. Read `wiki/index.md` to identify relevant pages
-2. Grep the question for any token matching a `wiki/concepts/`, `wiki/entities/`, or `wiki/examples/` filename — read every match (index summaries are lossy by design)
+1. Read `knowledge/wiki/index.md` to identify relevant pages
+2. Grep the question for any token matching a `knowledge/wiki/concepts/`, `knowledge/wiki/entities/`, or `knowledge/wiki/examples/` filename — read every match (index summaries are lossy by design)
 3. Read those pages with the Read tool
 4. Synthesize an answer with inline citations as `[[PageName]]` wikilinks
-5. Ask the user if they want the answer filed as `wiki/syntheses/<slug>.md`
+5. Ask the user if they want the answer filed as `knowledge/wiki/syntheses/<slug>.md`
 
 ---
 
@@ -325,9 +329,9 @@ Triggered by: *any modeling, coding, or domain task that the wiki could inform.*
 The wiki is intentionally small. Reading all of it is cheap; guessing the API is expensive.
 
 Steps:
-1. List `wiki/concepts/`, `wiki/sources/`, `wiki/examples/`
+1. List `knowledge/wiki/concepts/`, `knowledge/wiki/sources/`, `knowledge/wiki/examples/`
 2. Read every page whose title names a concept, package, method, or term appearing in the task
-3. If the task touches a `[method]` or `[software]` concept that has **no** `wiki/examples/<slug>` file, surface the gap to the user **before** writing code. Do NOT invent the API.
+3. If the task touches a `[method]` or `[software]` concept that has **no** `knowledge/wiki/examples/<slug>` file, surface the gap to the user **before** writing code. Do NOT invent the API.
 4. Cite the originating wiki page(s) inline in code comments where a non-obvious choice is made (e.g., `# variance power per [[TweedieDistribution]]`)
 5. After the task, if the work surfaced a gap, contradiction, or new pitfall, propose a wiki update before closing out
 
@@ -347,10 +351,10 @@ Use Grep and Read tools to check for:
 - **Data gaps** — questions the wiki can't answer; suggest new sources
 - **Method pages without code** — pages tagged `[method]` or `[software]` (source or concept) lacking a fenced code block or a `[[examples/...]]` wikilink → fail
 - **Sources missing Canonical API** — source pages tagged `[method]` without a `## Canonical API` section → fail
-- **Missing examples** — concept pages tagged `[method]` or `[software]` without a matching file under `wiki/examples/` → fail
+- **Missing examples** — concept pages tagged `[method]` or `[software]` without a matching file under `knowledge/wiki/examples/` → fail
 - **Stub concept pages** — concept pages under 500 characters of body content with no required sections from the Concept Page Format → fail
 
-Output a lint report and ask if the user wants it saved to `wiki/lint-report.md`.
+Output a lint report and ask if the user wants it saved to `knowledge/wiki/lint-report.md`.
 
 ---
 
@@ -362,10 +366,10 @@ Run: `python tools/health.py` (or `python tools/health.py --json` for machine-re
 
 Fast structural integrity checks — **zero LLM calls**, safe to run every session:
 - **Empty / stub files** — pages with no content beyond frontmatter (rate-limit damage)
-- **Index sync** — `wiki/index.md` entries vs actual files on disk
-- **Log coverage** — source pages missing a corresponding `ingest` entry in `wiki/log.md`
+- **Index sync** — `knowledge/wiki/index.md` entries vs actual files on disk
+- **Log coverage** — source pages missing a corresponding `ingest` entry in `knowledge/wiki/log.md`
 
-Output a health report. Use `--save` to write to `wiki/health-report.md`.
+Output a health report. Use `--save` to write to `knowledge/wiki/health-report.md`.
 
 ### Health vs Lint Boundary
 
@@ -391,13 +395,13 @@ When the user asks to build the graph, run `tools/build_graph.py` which:
 - Pass 1: Parses all `[[wikilinks]]` → deterministic `EXTRACTED` edges
 - Pass 2: Infers implicit relationships → `INFERRED` edges with confidence scores
 - Runs Louvain community detection
-- Outputs `graph/graph.json` + `graph/graph.html`
+- Outputs `knowledge/graph/graph.json` + `knowledge/graph/graph.html`
 
 If the user doesn't have Python/dependencies set up, instead generate the graph data manually:
 1. Use Grep to find all `[[wikilinks]]` across wiki pages
 2. Build a node/edge list
-3. Write `graph/graph.json` directly
-4. Write `graph/graph.html` using the vis.js template
+3. Write `knowledge/graph/graph.json` directly
+4. Write `knowledge/graph/graph.html` using the vis.js template
 
 ---
 
@@ -434,7 +438,7 @@ If the user doesn't have Python/dependencies set up, instead generate the graph 
 Each entry starts with `## [YYYY-MM-DD] <operation> | <title>` so it's grep-parseable:
 
 ```
-grep "^## \[" wiki/log.md | tail -10
+grep "^## \[" knowledge/wiki/log.md | tail -10
 ```
 
 Operations: `ingest`, `query`, `health`, `lint`, `graph`

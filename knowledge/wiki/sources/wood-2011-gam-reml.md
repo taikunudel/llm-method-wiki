@@ -3,7 +3,7 @@ title: "Fast Stable Restricted Maximum Likelihood and Marginal Likelihood Estima
 type: source
 tags: [method, mgcv, gam, smoothing, REML]
 date: 2011-01-01
-source_file: raw/papers/wood-2011-gam-reml.md
+source_file: knowledge/raw/papers/wood-2011-gam-reml.md
 ---
 
 ## Summary

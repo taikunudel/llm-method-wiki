@@ -24,9 +24,9 @@ Follow the Lint Workflow defined in [CLAUDE.md](../../CLAUDE.md). Using the Grep
 **Method/software coverage**
 8. **Method pages without code** — pages tagged `[method]` or `[software]` lacking a fenced code block or `[[examples/...]]` wikilink → fail.
 9. **Sources missing Canonical API** — source pages tagged `[method]` without a `## Canonical API` section → fail.
-10. **Missing examples** — concept pages tagged `[method]` or `[software]` without a matching file under `wiki/examples/` → fail.
+10. **Missing examples** — concept pages tagged `[method]` or `[software]` without a matching file under `knowledge/wiki/examples/` → fail.
 11. **Stub concept pages** — concept pages under 500 characters of body content with no required sections → fail.
 
-Output a structured markdown lint report. Ask if the user wants it saved to `wiki/lint-report.md`.
+Output a structured markdown lint report. Ask if the user wants it saved to `knowledge/wiki/lint-report.md`.
 
-Append to `wiki/log.md`: `## [YYYY-MM-DD] lint | Wiki health check`.
+Append to `knowledge/wiki/log.md`: `## [YYYY-MM-DD] lint | Wiki health check`.

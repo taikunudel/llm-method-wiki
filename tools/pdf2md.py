@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Convert PDF or arXiv sources to Markdown for the raw/ directory.
+Convert PDF or arXiv sources to Markdown for the knowledge/raw/ directory.
 
 Usage:
-    python tools/pdf2md.py <input> [--output raw/papers/output.md] [--backend auto]
+    python tools/pdf2md.py <input> [--output knowledge/raw/papers/output.md] [--backend auto]
 
 Inputs:
     arXiv ID      →  2401.12345
@@ -20,7 +20,7 @@ Examples:
     python tools/pdf2md.py 2401.12345
     python tools/pdf2md.py https://arxiv.org/abs/2401.12345
     python tools/pdf2md.py paper.pdf --backend marker
-    python tools/pdf2md.py paper.pdf -o raw/papers/my-paper.md
+    python tools/pdf2md.py paper.pdf -o knowledge/raw/papers/my-paper.md
 """
 
 import argparse
@@ -32,7 +32,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent
-DEFAULT_OUTPUT_DIR = REPO_ROOT / "raw" / "papers"
+DEFAULT_OUTPUT_DIR = REPO_ROOT / "knowledge" / "raw" / "papers"
 
 ARXIV_PATTERNS = [
     re.compile(r"^(\d{4}\.\d{4,5})(v\d+)?$"),                          # 2401.12345
@@ -171,12 +171,12 @@ def resolve_output(source: str, arxiv_id: str | None, output_arg: str | None) ->
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Convert PDF/arXiv to Markdown for raw/",
+        description="Convert PDF/arXiv to Markdown for knowledge/raw/",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
     parser.add_argument("input", help="arXiv ID, arXiv URL, or path to a PDF file")
-    parser.add_argument("-o", "--output", help="Output .md path (default: raw/papers/<slug>.md)")
+    parser.add_argument("-o", "--output", help="Output .md path (default: knowledge/raw/papers/<slug>.md)")
     parser.add_argument(
         "-b", "--backend",
         choices=["auto", "arxiv2md", "marker", "pymupdf4llm"],

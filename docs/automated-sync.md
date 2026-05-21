@@ -7,7 +7,7 @@ This guide outlines a production-grade cron/launchd strategy for local Mac/Linux
 ## The Two-Step Architecture
 
 LLM Wiki Agent ingestion is a two-step process:
-1. **Syncing to `raw/`**: Getting files from your personal vault/tools into the agent's staging area.
+1. **Syncing to `knowledge/raw/`**: Getting files from your personal vault/tools into the agent's staging area.
 2. **Batch Ingestion**: Triggering `tools/ingest.py` on the synchronized directories to synthesize and weave them into the graph.
 
 ### Step 1: The Master Orchestrator Script
@@ -36,7 +36,7 @@ export LLM_MODEL="gemini/gemini-3-flash-preview"
 export GEMINI_API_KEY="AIzaSy..."  # or export OPENAI_API_KEY
 
 echo "[$DATE] Batch ingesting markdown files..." >> "$LOG_FILE"
-find raw/ -type l -name "*.md" -o -type f -name "*.md" | \
+find knowledge/raw/ -type l -name "*.md" -o -type f -name "*.md" | \
 while read file; do 
     python3 tools/ingest.py "$file" >> "$LOG_FILE" 2>&1
 done

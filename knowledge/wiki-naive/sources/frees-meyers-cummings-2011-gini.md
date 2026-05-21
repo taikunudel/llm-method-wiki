@@ -3,7 +3,7 @@ title: "Risk Based Scores and the Gini Index"
 type: source
 tags: [Gini index, insurance, Lorenz curve, financial risk]
 date: 2026-05-01
-source_file: raw/frees-meyers-cummings-2011-gini.md
+source_file: knowledge/raw/frees-meyers-cummings-2011-gini.md
 ---
 
 ## Summary

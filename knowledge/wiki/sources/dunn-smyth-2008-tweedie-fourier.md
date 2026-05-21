@@ -3,7 +3,7 @@ title: "Evaluation of Tweedie Exponential Dispersion Model Densities by Fourier 
 type: source
 tags: [method, tweedie, numerical, density]
 date: 2008-08-17
-source_file: raw/papers/dunn-smyth-2008-tweedie-fourier.md
+source_file: knowledge/raw/papers/dunn-smyth-2008-tweedie-fourier.md
 ---
 
 ## Summary

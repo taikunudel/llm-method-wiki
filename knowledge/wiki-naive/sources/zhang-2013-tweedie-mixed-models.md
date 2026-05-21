@@ -3,7 +3,7 @@ title: "Likelihood-based and Bayesian Methods for Tweedie Compound Poisson Linea
 type: source
 tags: [Tweedie distribution, Bayesian methods, statistical inference, mixed models]
 date: 2026-05-01
-source_file: raw/zhang-2013-cplm.md
+source_file: knowledge/raw/zhang-2013-cplm.md
 ---
 
 ## Summary

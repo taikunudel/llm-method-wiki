@@ -3,7 +3,7 @@ title: "Fitting Tweedie's Compound Poisson Model to Insurance Claims Data: Dispe
 type: source
 tags: [method, statmod, tweedie, dglm, insurance]
 date: 2002-01-01
-source_file: raw/papers/smyth-jorgensen-2002-tweedie-dispersion.md
+source_file: knowledge/raw/papers/smyth-jorgensen-2002-tweedie-dispersion.md
 ---
 
 ## Summary

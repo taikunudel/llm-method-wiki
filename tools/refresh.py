@@ -8,7 +8,7 @@ Usage:
     python tools/refresh.py --page sources/X    # refresh a specific page
 
 Compares raw document hashes against stored hashes to detect changes.
-Re-ingests changed documents to update wiki/sources/ pages with accurate facts.
+Re-ingests changed documents to update knowledge/wiki/sources/ pages with accurate facts.
 """
 
 import os
@@ -21,10 +21,10 @@ from pathlib import Path
 from datetime import date
 
 REPO_ROOT = Path(__file__).parent.parent
-WIKI_DIR = REPO_ROOT / "wiki"
-RAW_DIR = REPO_ROOT / "raw"
+WIKI_DIR = REPO_ROOT / "knowledge" / "wiki"
+RAW_DIR = REPO_ROOT / "knowledge" / "raw"
 SOURCES_DIR = WIKI_DIR / "sources"
-REFRESH_CACHE = REPO_ROOT / "graph" / ".refresh_cache.json"
+REFRESH_CACHE = REPO_ROOT / "knowledge" / "graph" / ".refresh_cache.json"
 
 
 def sha256(text: str) -> str:
@@ -73,7 +73,7 @@ def find_stale_sources(force: bool = False) -> list[tuple[Path, Path]]:
 
         raw_path = REPO_ROOT / source_file
         if not raw_path.exists():
-            # Try relative to raw/
+            # Try relative to knowledge/raw/
             raw_path = RAW_DIR / source_file
             if not raw_path.exists():
                 continue

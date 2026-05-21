@@ -3,7 +3,7 @@ title: "Likelihood-based and Bayesian Methods for Tweedie Compound Poisson Linea
 type: source
 tags: [method, cplm, tweedie, mixed-models, bayesian]
 date: 2013-01-01
-source_file: raw/papers/zhang-2013-cplm.md
+source_file: knowledge/raw/papers/zhang-2013-cplm.md
 ---
 
 ## Summary

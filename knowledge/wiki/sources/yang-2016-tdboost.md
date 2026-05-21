@@ -3,7 +3,7 @@ title: "Insurance Premium Prediction via Gradient Tree-Boosted Tweedie Compound 
 type: source
 tags: [method, TDboost, tweedie, boosting, insurance]
 date: 2016-04-22
-source_file: raw/papers/yang-2016-tdboost.md
+source_file: knowledge/raw/papers/yang-2016-tdboost.md
 ---
 
 ## Summary

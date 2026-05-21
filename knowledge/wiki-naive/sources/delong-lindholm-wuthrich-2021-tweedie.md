@@ -3,7 +3,7 @@ title: "Making Tweedie’s Compound Poisson Model More Accessible"
 type: source
 tags: [Tweedie distribution, compound Poisson model, insurance, GLM, neural networks]
 date: 2026-05-01
-source_file: raw/delong-lindholm-wuthrich-2021-tweedie.md
+source_file: knowledge/raw/delong-lindholm-wuthrich-2021-tweedie.md
 ---
 
 ## Summary

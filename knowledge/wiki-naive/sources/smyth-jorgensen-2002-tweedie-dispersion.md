@@ -3,7 +3,7 @@ title: "Fitting Tweedie's Compound Poisson Model to Insurance Claims Data: Dispe
 type: source
 tags: [insurance, statistics, Tweedie distribution]
 date: 2022-05-01
-source_file: raw/smyth-jorgensen-2002-tweedie-dispersion.md
+source_file: knowledge/raw/smyth-jorgensen-2002-tweedie-dispersion.md
 ---
 
 ## Summary

@@ -3,7 +3,7 @@ title: "Tweedie's Compound Poisson Model With Grouped Elastic Net"
 type: source
 tags: [Tweedie distribution, elastic net, insurance, variable selection, GLM]
 date: 2026-05-01
-source_file: raw/qian-2016-hdtweedie.md
+source_file: knowledge/raw/qian-2016-hdtweedie.md
 ---
 
 ## Summary

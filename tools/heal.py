@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from tools.lint import find_missing_entities, all_wiki_pages
 
 REPO_ROOT = Path(__file__).parent.parent
-WIKI_DIR = REPO_ROOT / "wiki"
+WIKI_DIR = REPO_ROOT / "knowledge" / "wiki"
 ENTITIES_DIR = WIKI_DIR / "entities"
 
 def call_llm(prompt: str, max_tokens: int = 1500) -> str:

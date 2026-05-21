@@ -4,8 +4,8 @@ These four files define the `/wiki-*` slash commands that Claude Code exposes wh
 
 You can invoke them in two ways:
 
-- Type the slash command: `/wiki-ingest raw/my-paper.md`
-- Or just say what you want: *"ingest raw/my-paper.md"*
+- Type the slash command: `/wiki-ingest knowledge/raw/my-paper.md`
+- Or just say what you want: *"ingest knowledge/raw/my-paper.md"*
 
 Claude Code reads `CLAUDE.md` automatically on every session, so both forms route to the same workflow.
 
@@ -13,10 +13,10 @@ Claude Code reads `CLAUDE.md` automatically on every session, so both forms rout
 
 | Command | What it does | Example |
 |---|---|---|
-| [`/wiki-ingest`](wiki-ingest.md) | Process a file from `raw/` into the wiki — write a source page, update `index.md` / `overview.md`, create or merge concept and entity pages, append to `log.md`. | `/wiki-ingest raw/papers/qian-2016-hdtweedie.md` |
+| [`/wiki-ingest`](wiki-ingest.md) | Process a file from `knowledge/raw/` into the wiki — write a source page, update `index.md` / `overview.md`, create or merge concept and entity pages, append to `log.md`. | `/wiki-ingest knowledge/raw/papers/qian-2016-hdtweedie.md` |
 | [`/wiki-query`](wiki-query.md) | Answer a question against the wiki with `[[PageName]]` citations. Optionally save the answer as a synthesis page. | `/wiki-query what are the failure modes of HDtweedie?` |
 | [`/wiki-lint`](wiki-lint.md) | Quality audit — orphan pages, broken links, contradictions, stale summaries, gaps. Expensive; run periodically. | `/wiki-lint` |
-| [`/wiki-graph`](wiki-graph.md) | Build the `[[wikilink]]` graph and write `graph/graph.json` + an interactive `graph/graph.html`. | `/wiki-graph` |
+| [`/wiki-graph`](wiki-graph.md) | Build the `[[wikilink]]` graph and write `knowledge/graph/graph.json` + an interactive `knowledge/graph/graph.html`. | `/wiki-graph` |
 
 `/wiki-health` (fast structural checks via `tools/health.py`) is documented in [CLAUDE.md](../../CLAUDE.md) but does not yet have a dedicated slash-command file here.
 
