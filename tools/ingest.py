@@ -4,10 +4,10 @@ Ingest a source document into the LLM Wiki.
 
 Usage:
     python tools/ingest.py <path-to-source>
-    python tools/ingest.py raw/articles/my-article.md
+    python tools/ingest.py knowledge/raw/articles/my-article.md
     python tools/ingest.py report.pdf                  # auto-converts to .md
     python tools/ingest.py slides.pptx notes.docx       # batch, mixed formats
-    python tools/ingest.py raw/mixed/ --no-convert      # skip auto-conversion
+    python tools/ingest.py knowledge/raw/mixed/ --no-convert      # skip auto-conversion
     python tools/ingest.py --validate-only              # run validation only
 
 Supported formats (auto-converted via markitdown):
@@ -15,11 +15,11 @@ Supported formats (auto-converted via markitdown):
     .rst .rtf .epub .ipynb .yaml .yml .tsv .wav .mp3
 
 The LLM reads the source, extracts knowledge, and updates the wiki:
-  - Creates wiki/sources/<slug>.md
-  - Updates wiki/index.md
-  - Updates wiki/overview.md (if warranted)
+  - Creates knowledge/wiki/sources/<slug>.md
+  - Updates knowledge/wiki/index.md
+  - Updates knowledge/wiki/overview.md (if warranted)
   - Creates/updates entity and concept pages
-  - Appends to wiki/log.md
+  - Appends to knowledge/wiki/log.md
   - Flags contradictions
   - Runs post-ingest validation (broken links, index coverage)
 """
@@ -36,7 +36,7 @@ from collections import defaultdict
 from datetime import date
 
 REPO_ROOT = Path(__file__).parent.parent
-WIKI_DIR = REPO_ROOT / "wiki"
+WIKI_DIR = REPO_ROOT / "knowledge" / "wiki"
 LOG_FILE = WIKI_DIR / "log.md"
 INDEX_FILE = WIKI_DIR / "index.md"
 OVERVIEW_FILE = WIKI_DIR / "overview.md"
@@ -92,9 +92,9 @@ def write_file(path: Path, content: str):
 def build_wiki_context() -> str:
     parts = []
     if INDEX_FILE.exists():
-        parts.append(f"## wiki/index.md\n{read_file(INDEX_FILE)}")
+        parts.append(f"## knowledge/wiki/index.md\n{read_file(INDEX_FILE)}")
     if OVERVIEW_FILE.exists():
-        parts.append(f"## wiki/overview.md\n{read_file(OVERVIEW_FILE)}")
+        parts.append(f"## knowledge/wiki/overview.md\n{read_file(OVERVIEW_FILE)}")
     # Include a few recent source pages for contradiction checking
     sources_dir = WIKI_DIR / "sources"
     if sources_dir.exists():
@@ -271,9 +271,9 @@ Return ONLY a valid JSON object with these fields (no markdown fences, no prose 
 {{
   "title": "Human-readable title for this source",
   "slug": "kebab-case-slug-for-filename",
-  "source_page": "full markdown content for wiki/sources/<slug>.md — use the source page format from the schema. CRITICAL: Aggressively convert key people, products, concepts and projects into [[Wikilinks]] inline in the text. Omitting [[ ]] for known terms is a failure.",
+  "source_page": "full markdown content for knowledge/wiki/sources/<slug>.md — use the source page format from the schema. CRITICAL: Aggressively convert key people, products, concepts and projects into [[Wikilinks]] inline in the text. Omitting [[ ]] for known terms is a failure.",
   "index_entry": "- [Title](sources/slug.md) — one-line summary",
-  "overview_update": "full updated content for wiki/overview.md, or null if no update needed",
+  "overview_update": "full updated content for knowledge/wiki/overview.md, or null if no update needed",
   "entity_pages": [
     {{"path": "entities/EntityName.md", "content": "full markdown content"}}
   ],
@@ -341,22 +341,22 @@ Return ONLY a valid JSON object with these fields (no markdown fences, no prose 
     print(f"{'='*50}")
     print(f"  Created : {len(created_pages)} pages")
     for p in created_pages:
-        print(f"           + wiki/{p}")
+        print(f"           + knowledge/wiki/{p}")
     print(f"  Updated : {len(updated_pages)} pages")
     for p in updated_pages:
-        print(f"           ~ wiki/{p}")
+        print(f"           ~ knowledge/wiki/{p}")
     if contradictions:
         print(f"  Warnings: {len(contradictions)} contradiction(s)")
     if validation["broken_links"]:
         print(f"  ⚠️  Broken links: {len(validation['broken_links'])}")
         for page, link in validation["broken_links"][:10]:
-            print(f"           wiki/{page} → [[{link}]]")
+            print(f"           knowledge/wiki/{page} → [[{link}]]")
         if len(validation["broken_links"]) > 10:
             print(f"           ... and {len(validation['broken_links']) - 10} more")
     if validation["unindexed"]:
         print(f"  ⚠️  Not in index.md: {len(validation['unindexed'])}")
         for p in validation["unindexed"][:10]:
-            print(f"           wiki/{p}")
+            print(f"           knowledge/wiki/{p}")
         if len(validation["unindexed"]) > 10:
             print(f"           ... and {len(validation['unindexed']) - 10} more")
     if not validation["broken_links"] and not validation["unindexed"]:
@@ -372,7 +372,7 @@ if __name__ == "__main__":
         if result["broken_links"]:
             print(f"Broken wikilinks: {len(result['broken_links'])}")
             for page, link in result["broken_links"][:20]:
-                print(f"  wiki/{page} → [[{link}]]")
+                print(f"  knowledge/wiki/{page} → [[{link}]]")
             if len(result["broken_links"]) > 20:
                 print(f"  ... and {len(result['broken_links']) - 20} more")
         else:
@@ -389,7 +389,7 @@ if __name__ == "__main__":
         if unindexed_all:
             print(f"Pages not in index.md: {len(unindexed_all)}")
             for up in unindexed_all[:20]:
-                print(f"  wiki/{up}")
+                print(f"  knowledge/wiki/{up}")
             if len(unindexed_all) > 20:
                 print(f"  ... and {len(unindexed_all) - 20} more")
         else:

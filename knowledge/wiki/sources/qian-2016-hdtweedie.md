@@ -3,7 +3,7 @@ title: "Tweedie's Compound Poisson Model With Grouped Elastic Net"
 type: source
 tags: [method, HDtweedie, tweedie, regularization, insurance]
 date: 2016-05-01
-source_file: raw/papers/qian-2016-hdtweedie.md
+source_file: knowledge/raw/papers/qian-2016-hdtweedie.md
 ---
 
 ## Summary

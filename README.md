@@ -6,16 +6,16 @@
 
 | You do | Claude Code does | The agent later does |
 |---|---|---|
-| Drop a paper into `raw/` | Builds a structured wiki page — `Canonical API`, `Argument Quirks`, `Failure Modes`, runnable snippet | Reads the page before writing model code, cites it, copies the snippet |
+| Drop a paper into `knowledge/raw/` | Builds a structured wiki page — `Canonical API`, `Argument Quirks`, `Failure Modes`, runnable snippet | Reads the page before writing model code, cites it, copies the snippet |
 | Run `/wiki-query <question>` | Synthesizes an answer with `[[Page]]` citations | Treats the answer as a sourced memo, not a paraphrase from training memory |
 | Run `/wiki-lint` periodically | Reports contradictions, orphans, missing snippets, gaps | Surfaces gaps when the wiki can't support a decision |
-| Run `/wiki-graph` | Builds an interactive cross-link graph at `graph/graph.html` | — |
+| Run `/wiki-graph` | Builds an interactive cross-link graph at `knowledge/graph/graph.html` | — |
 
 ## How it flows
 
 ```mermaid
 flowchart LR
-    A[Source document<br/>in raw/] --> B[Claude Code<br/>+ method-aware schema]
+    A[Source document<br/>in knowledge/raw/] --> B[Claude Code<br/>+ method-aware schema]
     B --> C[Wiki page<br/>Canonical API · Key Hyperparameters<br/>Argument Quirks · Failure Modes<br/>Domain Pitfalls · Verified Snippet]
     D[Modeling task<br/>given to agent] --> E[Agent reads<br/>relevant wiki pages]
     C ==> E
@@ -50,7 +50,7 @@ This is not retrieval-augmented generation. RAG re-derives knowledge from raw ch
 
 ## What a wiki page looks like
 
-A real page from the seeded corpus — [`wiki/sources/qian-2016-hdtweedie.md`](wiki/sources/qian-2016-hdtweedie.md), truncated for the README:
+A real page from the seeded corpus — [`wiki/sources/qian-2016-hdtweedie.md`](knowledge/wiki/sources/qian-2016-hdtweedie.md), truncated for the README:
 
 ```markdown
 ---
@@ -101,10 +101,10 @@ claude   # opens Claude Code in this directory
 
 In Claude Code:
 
-1. Drop a source document into `raw/` (Markdown ingested directly; PDFs, .docx, .pptx, .html, etc. auto-convert via [markitdown](https://github.com/microsoft/markitdown)).
-2. Say *"ingest raw/your-file.md"* — Claude builds the source page, updates `index.md`, creates any new concept/entity pages, and logs the ingest.
+1. Drop a source document into `knowledge/raw/` (Markdown ingested directly; PDFs, .docx, .pptx, .html, etc. auto-convert via [markitdown](https://github.com/microsoft/markitdown)).
+2. Say *"ingest knowledge/raw/your-file.md"* — Claude builds the source page, updates `index.md`, creates any new concept/entity pages, and logs the ingest.
 3. Ask the wiki anything: *"What does the wiki say about Tweedie variance power?"*
-4. Build the cross-link graph: *"build the knowledge graph"* — produces an interactive `graph/graph.html`.
+4. Build the cross-link graph: *"build the knowledge graph"* — produces an interactive `knowledge/graph/graph.html`.
 5. Periodically: *"lint the wiki"* (semantic checks) and *"health"* (fast structural checks).
 
 No API key or Python script needed for the wiki itself — Claude Code reads [CLAUDE.md](CLAUDE.md) automatically and follows the workflows. The Python tools under `tools/` are optional accelerators (graph builder, health checker, etc.).
@@ -113,7 +113,7 @@ No API key or Python script needed for the wiki itself — Claude Code reads [CL
 
 | Command | What it does | Plain-English form |
 |---|---|---|
-| [`/wiki-ingest`](.claude/commands/wiki-ingest.md) | Process a file from `raw/` into the wiki | *"ingest raw/my-paper.md"* |
+| [`/wiki-ingest`](.claude/commands/wiki-ingest.md) | Process a file from `knowledge/raw/` into the wiki | *"ingest knowledge/raw/my-paper.md"* |
 | [`/wiki-query`](.claude/commands/wiki-query.md) | Answer a question with citations | *"what does the wiki say about X?"* |
 | [`/wiki-lint`](.claude/commands/wiki-lint.md) | Quality audit (orphans, contradictions, gaps) | *"lint the wiki"* |
 | [`/wiki-graph`](.claude/commands/wiki-graph.md) | Build interactive `[[wikilink]]` graph | *"build the graph"* |
@@ -125,7 +125,7 @@ See [`.claude/commands/`](.claude/commands/) for the command definitions, and [C
 - **Persistent wiki** — structured markdown pages that accumulate across sessions. Unlike a chat, nothing is lost.
 - **Auto-created entity pages** — one per person, company, package, or project mentioned, updated each time a new source references it.
 - **Auto-created concept pages** — one per idea, method, or framework, cross-referenced to every source that discusses it.
-- **Living overview** — `wiki/overview.md` is revised on every ingest to reflect the current synthesis across everything ingested.
+- **Living overview** — `knowledge/wiki/overview.md` is revised on every ingest to reflect the current synthesis across everything ingested.
 - **Contradiction flags at ingest time** — when a new source conflicts with an existing claim, it's surfaced as you add it, not buried until query time.
 - **Knowledge graph** — every page a node, every `[[wikilink]]` an edge, plus inferred implicit relationships and community detection (see [The graph](#the-graph)).
 - **Lint reports** — orphan pages, broken links, missing entity pages, and data gaps with suggested sources to fill them.
@@ -142,9 +142,9 @@ The seeded corpus is actuarial, but the schema is general-purpose — any collec
 Going deep on a topic over weeks — papers, articles, reports.
 
 ```
-/wiki-ingest raw/papers/attention-is-all-you-need.md
-/wiki-ingest raw/papers/llama2.md
-/wiki-ingest raw/papers/rag-survey.md
+/wiki-ingest knowledge/raw/papers/attention-is-all-you-need.md
+/wiki-ingest knowledge/raw/papers/llama2.md
+/wiki-ingest knowledge/raw/papers/rag-survey.md
 
 # Entity pages (Meta AI, Google Brain) and concept pages
 # (Attention, RLHF, Context Window) are created automatically.
@@ -163,8 +163,8 @@ By the end you have a structured, interlinked reference — not a folder of PDFs
 File each chapter as you go; build pages for characters, themes, arguments.
 
 ```
-/wiki-ingest raw/book/chapter-01.md
-/wiki-ingest raw/book/chapter-02.md
+/wiki-ingest knowledge/raw/book/chapter-01.md
+/wiki-ingest knowledge/raw/book/chapter-02.md
 
 /wiki-query "How has the protagonist's motivation evolved?"
 /wiki-query "What contradictions exist in the author's argument so far?"
@@ -179,8 +179,8 @@ Think fan wikis like Tolkien Gateway — built as you read, with the agent doing
 Track goals, health, habits — file journal entries, articles, podcast notes.
 
 ```
-/wiki-ingest raw/journal/2026-01-week1.md
-/wiki-ingest raw/articles/huberman-sleep-protocol.md
+/wiki-ingest knowledge/raw/journal/2026-01-week1.md
+/wiki-ingest knowledge/raw/articles/huberman-sleep-protocol.md
 
 /wiki-query "What patterns show up in my journal entries about energy?"
 /wiki-query "What habits have I tried and what was the outcome?"
@@ -193,9 +193,9 @@ Concepts like "Sleep", "Exercise", "Deep Work" accumulate evidence from every so
 Feed in meeting transcripts, project docs, customer calls.
 
 ```
-/wiki-ingest raw/meetings/q1-planning-transcript.md
-/wiki-ingest raw/docs/product-roadmap-2026.md
-/wiki-ingest raw/calls/customer-interview-acme.md
+/wiki-ingest knowledge/raw/meetings/q1-planning-transcript.md
+/wiki-ingest knowledge/raw/docs/product-roadmap-2026.md
+/wiki-ingest knowledge/raw/calls/customer-interview-acme.md
 
 /wiki-query "What feature requests have come up most across customer calls?"
 /wiki-lint
@@ -208,8 +208,8 @@ Feed in meeting transcripts, project docs, customer calls.
 Track a company, market, or technology over time.
 
 ```
-/wiki-ingest raw/competitors/openai-announcements.md
-/wiki-ingest raw/market/ai-funding-report-q1.md
+/wiki-ingest knowledge/raw/competitors/openai-announcements.md
+/wiki-ingest knowledge/raw/market/ai-funding-report-q1.md
 
 /wiki-query "How do OpenAI and Anthropic differ on safety approach?"
 /wiki-query "Competitive landscape summary as of today"
@@ -220,7 +220,7 @@ Track a company, market, or technology over time.
 
 ## Multi-format ingest
 
-Drop any supported file into `raw/` and ingest it — non-markdown is auto-converted via [markitdown](https://github.com/microsoft/markitdown) at ingest time, no separate step.
+Drop any supported file into `knowledge/raw/` and ingest it — non-markdown is auto-converted via [markitdown](https://github.com/microsoft/markitdown) at ingest time, no separate step.
 
 **Supported:** `.md` `.pdf` `.docx` `.pptx` `.xlsx` `.xls` `.html` `.htm` `.txt` `.csv` `.json` `.xml` `.rst` `.rtf` `.epub` `.ipynb` `.yaml` `.yml` `.tsv` `.wav` `.mp3`
 
@@ -240,8 +240,8 @@ python tools/pdf2md.py paper.pdf --backend marker        # complex multi-column 
 To pre-convert an entire directory (useful for bulk imports):
 
 ```bash
-python tools/file_to_md.py --input_dir raw/imports/
-python tools/file_to_md.py --input_dir raw/imports/ --delete_source  # remove originals
+python tools/file_to_md.py --input_dir knowledge/raw/imports/
+python tools/file_to_md.py --input_dir knowledge/raw/imports/ --delete_source  # remove originals
 ```
 
 Optional dependencies (only needed for the formats/paths you use):
@@ -263,16 +263,13 @@ Optional dependencies (only needed for the formats/paths you use):
 1. **Deterministic** — parses all `[[wikilinks]]` across wiki pages → edges tagged `EXTRACTED`.
 2. **Semantic** — Claude infers implicit relationships not captured by wikilinks → edges tagged `INFERRED` (with a confidence score) or `AMBIGUOUS`.
 
-Louvain community detection clusters nodes by topic. A SHA256 cache means only changed pages are reprocessed. Output is a self-contained `graph/graph.html` — no server, opens in any browser.
+Louvain community detection clusters nodes by topic. A SHA256 cache means only changed pages are reprocessed. Output is a self-contained `knowledge/graph/graph.html` — no server, opens in any browser.
 
 ## Repo layout
 
 | Path | What's there |
 |---|---|
-| `raw/` | Immutable source documents (papers, articles, notes). Never edited by the agent. |
-| `wiki/` | The generated knowledge base — `index.md`, `overview.md`, `sources/`, `concepts/`, `entities/`, `examples/`, `syntheses/`, `log.md`. |
-| `wiki-naive/` | Pre-regenerated state under the original (non-method-aware) schema, kept side-by-side so you can `diff` what the new templates produce on the same sources. |
-| `examples/` | Demo corpora (e.g. `cjk-showcase/`). |
+| `knowledge/` | All knowledge-base content lives here. Subdirectories: `raw/` (immutable source documents — never edited by the agent), `wiki/` (the generated knowledge base — `index.md`, `overview.md`, `sources/`, `concepts/`, `entities/`, `examples/`, `syntheses/`, `log.md`), `wiki-naive/` (pre-regenerated state under the original non-method-aware schema, kept side-by-side so you can `diff` the new vs old templates on the same sources), `graph/` (auto-generated graph artifacts — `graph.json` + interactive `graph.html`), `logs/` (ingest run logs), `examples/` (demo corpora like `cjk-showcase/`). |
 | `tools/` | Optional Python utilities — `build_graph.py`, `health.py`, `lint.py`, `ingest.py`, `query.py`, `heal.py`, `refresh.py`, `pdf2md.py`, `file_to_md.py`. |
 | `.claude/commands/` | Claude Code slash-command definitions (`/wiki-*`). |
 | `CLAUDE.md` / `AGENTS.md` / `GEMINI.md` | Identical schema/workflow instructions, read automatically by Claude Code, Codex/OpenCode, and Gemini CLI respectively. |
@@ -280,18 +277,18 @@ Louvain community detection clusters nodes by topic. A SHA256 cache means only c
 
 ## What's seeded in the wiki
 
-The `wiki/` ships pre-populated with the auto-insurance / Tweedie modeling corpus used to develop this fork — useful both as a starting knowledge base and as a worked example of what the schema produces on real method papers:
+The `knowledge/wiki/` ships pre-populated with the auto-insurance / Tweedie modeling corpus used to develop this fork — useful both as a starting knowledge base and as a worked example of what the schema produces on real method papers:
 
 - **8 source papers** — Smyth-Jorgensen (2002), Dunn-Smyth (2008), Frees-Meyers-Cummings (2011), Wood (2011), Zhang (2013), Qian-Yang-Zou (2016), Yang-Qian-Zou (2016), Delong-Lindholm-Wüthrich (2021).
-- **8 runnable R examples** in `wiki/examples/` — one per method, each calling its package against `cplm::AutoClaim`.
+- **8 runnable R examples** in `knowledge/wiki/examples/` — one per method, each calling its package against `cplm::AutoClaim`.
 - **17 concept pages** — Tweedie distribution, GLM, GAM, gradient boosting, grouped elastic net, Gini index, adverse selection, etc.
 - **14 entity pages** — authors and R packages.
 
 To start with the schema only (no seed content):
 
 ```bash
-rm -rf wiki/* raw/papers/*
-git checkout wiki/index.md wiki/log.md wiki/overview.md
+rm -rf knowledge/wiki/* knowledge/raw/papers/*
+git checkout knowledge/wiki/index.md knowledge/wiki/log.md knowledge/wiki/overview.md
 ```
 
 ## Using with other agents (openclaw, Codex, Gemini)
@@ -327,17 +324,17 @@ Then paste this block into the workspace's `AGENTS.md` (and/or `CLAUDE.md`, `GEM
 ```markdown
 ## 📚 Knowledge Base — Required
 
-A local wiki at `llm-wiki-agent/wiki/` is part of your task context.
+A local wiki at `llm-wiki-agent/knowledge/wiki/` is part of your task context.
 You **MUST** consult it before writing modeling, statistical, or
 domain-specific code. Skipping it is not allowed.
 
 **Required pre-task steps (in this order):**
 
-1. Read `llm-wiki-agent/wiki/index.md` — the catalog of every page.
+1. Read `llm-wiki-agent/knowledge/wiki/index.md` — the catalog of every page.
 2. For each domain term in your task, grep the wiki:
-   `grep -rli <term> llm-wiki-agent/wiki/`.
-3. Read every matching page under `wiki/sources/`, `wiki/concepts/`,
-   and `wiki/examples/`.
+   `grep -rli <term> llm-wiki-agent/knowledge/wiki/`.
+3. Read every matching page under `knowledge/wiki/sources/`, `knowledge/wiki/concepts/`,
+   and `knowledge/wiki/examples/`.
 4. Before invoking any package call that has a corresponding wiki
    page, read that page's `Argument Quirks` / `Failure Modes` /
    `Code Example` sections.
@@ -348,7 +345,7 @@ domain-specific code. Skipping it is not allowed.
   support it via `[[PageName]]` in code comments AND in your
   trajectory's `cites` array.
 - Empty `cites` on a substantive decision = task failure.
-- Prefer `wiki/examples/*.R` snippets — copy verbatim, then modify.
+- Prefer `knowledge/wiki/examples/*.R` snippets — copy verbatim, then modify.
   Don't regenerate from training memory when an example exists.
 
 **If the wiki has nothing relevant:** log a `gap_surfaced` event
@@ -383,7 +380,7 @@ If you want to later audit *whether* the agent used the wiki, also paste this `#
 ## 📋 Task Trajectory — Log What You Do
 
 When working on a modeling, coding, or domain task that consults the wiki at
-`llm-wiki-agent/wiki/`, record what you do as you do it so the work can be
+`llm-wiki-agent/knowledge/wiki/`, record what you do as you do it so the work can be
 audited later.
 
 **Where:** `audit/trajectories/<task-id>.jsonl` at the workspace root. Create
@@ -404,7 +401,7 @@ the end — timestamps matter to the auditor). Required event types:
 | `task_end` | `ts`, `task_id`, `summary`, `git_branch_end`, `git_sha_end` |
 
 `ts` is ISO-8601 UTC (`2026-05-16T14:22:01Z`). `page_id` is the path relative
-to `wiki/` (e.g. `concepts/TweedieDistribution.md`). `sha256` is the hash of
+to `knowledge/wiki/` (e.g. `concepts/TweedieDistribution.md`). `sha256` is the hash of
 the page contents at the time you read it — the auditor recomputes from git
 to detect fabricated reads.
 
@@ -413,7 +410,7 @@ to detect fabricated reads.
 - Emit each event immediately after the action it describes, not in a batch.
 - Every `decision` and `code_edit` MUST have a non-empty `cites` array if the
   wiki informed it. Empty cites on a substantive decision = faithfulness fail.
-- Mirror every `Read` of a `wiki/**` file as a `wiki_read` event.
+- Mirror every `Read` of a `knowledge/wiki/**` file as a `wiki_read` event.
 
 **Honesty:** the auditor cross-checks your trajectory against git history
 (`git log -p`, file mtimes) and any harness-level tool logs. Omissions and
@@ -429,13 +426,13 @@ The wiki is designed to browse seamlessly in [Obsidian](https://obsidian.md) —
 <details>
 <summary>Vault symlink pattern &amp; recommended config (click to expand)</summary>
 
-To keep the repo separate from your main vault, symlink the `wiki/` folder in:
+To keep the repo separate from your main vault, symlink the `knowledge/wiki/` folder in:
 
 ```bash
 ln -sfn ~/llm-method-wiki/wiki ~/your-obsidian-vault/wiki
 ```
 
-Then write to `raw/` (or use the [Obsidian Web Clipper](https://obsidian.md/clipper)) to queue items for ingestion. If you move the repo, update the symlink or `wiki/` will appear missing in Obsidian.
+Then write to `knowledge/raw/` (or use the [Obsidian Web Clipper](https://obsidian.md/clipper)) to queue items for ingestion. If you move the repo, update the symlink or `knowledge/wiki/` will appear missing in Obsidian.
 
 - **Graph View:** filter out `index.md` and `log.md` (`-file:index.md -file:log.md`) so they don't become gravity wells.
 - **Dataview:** the [Dataview](https://blacksmithgu.github.io/obsidian-dataview/) plugin can query the YAML frontmatter the agent injects (e.g. `type: source`, `tags: [diary]`).
@@ -468,8 +465,8 @@ NetworkX + Louvain + Claude + vis.js. No server, no database — everything is p
 
 - Method-aware schema (`Canonical API`, `Key Hyperparameters`, `Argument Quirks`, `Failure Modes`, `Domain Pitfalls`).
 - Concept-page template variants — `Method/Software`, `Domain`, `Diagnostic`.
-- `wiki/examples/` directory of verified runnable snippets, one per method.
-- Side-by-side `wiki/` vs `wiki-naive/` so you can `diff` the new vs. old schema on the same sources.
+- `knowledge/wiki/examples/` directory of verified runnable snippets, one per method.
+- Side-by-side `knowledge/wiki/` vs `knowledge/wiki-naive/` so you can `diff` the new vs. old schema on the same sources.
 - Three-agent compatibility via mirrored `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.
 - Domain-specific source templates (Diary / Journal, Meeting Notes) alongside the generic one.
 

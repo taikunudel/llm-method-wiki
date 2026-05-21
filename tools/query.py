@@ -22,7 +22,7 @@ from datetime import date
 import os
 
 REPO_ROOT = Path(__file__).parent.parent
-WIKI_DIR = REPO_ROOT / "wiki"
+WIKI_DIR = REPO_ROOT / "knowledge" / "wiki"
 INDEX_FILE = WIKI_DIR / "index.md"
 LOG_FILE = WIKI_DIR / "log.md"
 SCHEMA_FILE = REPO_ROOT / "CLAUDE.md"
@@ -82,7 +82,7 @@ def find_relevant_pages(question: str, index_content: str) -> list[Path]:
                 relevant.append(p)
 
     # Also try graph-based expansion: find neighbors of matched pages
-    graph_json = REPO_ROOT / "graph" / "graph.json"
+    graph_json = REPO_ROOT / "knowledge" / "graph" / "graph.json"
     if graph_json.exists() and relevant:
         try:
             graph_data = json.loads(graph_json.read_text())
@@ -146,7 +146,7 @@ def query(question: str, save_path: str | None = None):
         pages_context += f"\n\n### {rel}\n{p.read_text(encoding='utf-8')}"
 
     if not pages_context:
-        pages_context = f"\n\n### wiki/index.md\n{index_content}"
+        pages_context = f"\n\n### knowledge/wiki/index.md\n{index_content}"
 
     schema = read_file(SCHEMA_FILE)
 

@@ -6,7 +6,7 @@ Lint the LLM Wiki for health issues.
 
 Usage:
     python tools/lint.py
-    python tools/lint.py --save          # save lint report to wiki/lint-report.md
+    python tools/lint.py --save          # save lint report to knowledge/wiki/lint-report.md
 
 Checks:
   - Orphan pages (no inbound wikilinks from other pages)
@@ -28,8 +28,8 @@ from datetime import date
 import os
 
 REPO_ROOT = Path(__file__).parent.parent
-WIKI_DIR = REPO_ROOT / "wiki"
-GRAPH_DIR = REPO_ROOT / "graph"
+WIKI_DIR = REPO_ROOT / "knowledge" / "wiki"
+GRAPH_DIR = REPO_ROOT / "knowledge" / "graph"
 GRAPH_JSON = GRAPH_DIR / "graph.json"
 LOG_FILE = WIKI_DIR / "log.md"
 SCHEMA_FILE = REPO_ROOT / "CLAUDE.md"
@@ -439,7 +439,7 @@ def append_log(entry: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Lint the LLM Wiki")
-    parser.add_argument("--save", action="store_true", help="Save lint report to wiki/lint-report.md")
+    parser.add_argument("--save", action="store_true", help="Save lint report to knowledge/wiki/lint-report.md")
     args = parser.parse_args()
 
     report = run_lint()

@@ -3,7 +3,7 @@ title: "Risk Based Scores and the Gini Index"
 type: source
 tags: [method, cplm, gini, evaluation, insurance]
 date: 2011-04-27
-source_file: raw/papers/frees-meyers-cummings-2011-gini.md
+source_file: knowledge/raw/papers/frees-meyers-cummings-2011-gini.md
 ---
 
 ## Summary

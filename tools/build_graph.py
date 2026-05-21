@@ -10,8 +10,8 @@ Usage:
     python tools/build_graph.py --open        # open graph.html in browser after build
 
 Outputs:
-    graph/graph.json    — node/edge data (cached by SHA256)
-    graph/graph.html    — interactive vis.js visualization
+    knowledge/graph/graph.json    — node/edge data (cached by SHA256)
+    knowledge/graph/graph.html    — interactive vis.js visualization
 
 Edge types:
     EXTRACTED   — explicit [[wikilink]] in a page
@@ -39,8 +39,8 @@ except ImportError:
     print("Warning: networkx not installed. Community detection disabled. Run: pip install networkx")
 
 REPO_ROOT = Path(__file__).parent.parent
-WIKI_DIR = REPO_ROOT / "wiki"
-GRAPH_DIR = REPO_ROOT / "graph"
+WIKI_DIR = REPO_ROOT / "knowledge" / "wiki"
+GRAPH_DIR = REPO_ROOT / "knowledge" / "graph"
 GRAPH_JSON = GRAPH_DIR / "graph.json"
 GRAPH_HTML = GRAPH_DIR / "graph.html"
 CACHE_FILE = GRAPH_DIR / ".cache.json"
@@ -1260,12 +1260,12 @@ def build_graph(infer: bool = True, open_browser: bool = False, clean: bool = Fa
     # Save graph.json
     graph_data = {"nodes": nodes, "edges": edges, "built": today}
     GRAPH_JSON.write_text(json.dumps(graph_data, indent=2, ensure_ascii=False))
-    print(f"  saved: graph/graph.json  ({len(nodes)} nodes, {len(edges)} edges)")
+    print(f"  saved: knowledge/graph/graph.json  ({len(nodes)} nodes, {len(edges)} edges)")
 
     # Save graph.html
     html = render_html(nodes, edges)
     GRAPH_HTML.write_text(html, encoding="utf-8")
-    print(f"  saved: graph/graph.html")
+    print(f"  saved: knowledge/graph/graph.html")
 
     n_ext = len([e for e in edges if e['type']=='EXTRACTED'])
     n_inf = len([e for e in edges if e['type'] in ('INFERRED', 'AMBIGUOUS')])
@@ -1294,7 +1294,7 @@ if __name__ == "__main__":
     parser.add_argument("--open", action="store_true", help="Open graph.html in browser")
     parser.add_argument("--clean", action="store_true", help="Delete checkpoint and force full re-inference")
     parser.add_argument("--report", action="store_true", help="Generate graph health report")
-    parser.add_argument("--save", action="store_true", help="Save report to graph/graph-report.md")
+    parser.add_argument("--save", action="store_true", help="Save report to knowledge/graph/graph-report.md")
     args = parser.parse_args()
     build_graph(infer=not args.no_infer, open_browser=args.open, clean=args.clean,
                 report=args.report, save=args.save)

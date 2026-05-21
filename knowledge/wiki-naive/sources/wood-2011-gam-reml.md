@@ -3,7 +3,7 @@ title: "Efficient Smoothing for Generalized Additive Models"
 type: source
 tags: [Generalized Additive Models, smoothing, statistics, numerical methods, GAMM]
 date: 2026-05-01
-source_file: raw/wood-2011-gam-reml.md
+source_file: knowledge/raw/wood-2011-gam-reml.md
 ---
 
 ## Summary

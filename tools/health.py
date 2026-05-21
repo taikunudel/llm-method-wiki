@@ -10,12 +10,12 @@ every session.
 
 Usage:
     python tools/health.py              # print report to stdout
-    python tools/health.py --save       # also save to wiki/health-report.md
+    python tools/health.py --save       # also save to knowledge/wiki/health-report.md
     python tools/health.py --json       # machine-readable output
 
 Checks:
   - Empty / stub files (pages with no real content beyond frontmatter)
-  - Index sync (wiki/index.md entries vs actual files on disk)
+  - Index sync (knowledge/wiki/index.md entries vs actual files on disk)
   - Log coverage (source pages without a corresponding log entry)
 
 Design boundary (see AGENTS.md):
@@ -31,7 +31,7 @@ from pathlib import Path
 from datetime import date
 
 REPO_ROOT = Path(__file__).parent.parent
-WIKI_DIR = REPO_ROOT / "wiki"
+WIKI_DIR = REPO_ROOT / "knowledge" / "wiki"
 INDEX_FILE = WIKI_DIR / "index.md"
 LOG_FILE = WIKI_DIR / "log.md"
 
@@ -44,7 +44,7 @@ def read_file(path: Path) -> str:
 
 
 def all_wiki_pages() -> list[Path]:
-    """All .md files in wiki/, excluding meta files."""
+    """All .md files in knowledge/wiki/, excluding meta files."""
     exclude = {"index.md", "log.md", "lint-report.md", "health-report.md"}
     return [p for p in WIKI_DIR.rglob("*.md") if p.name not in exclude]
 
@@ -89,7 +89,7 @@ def _parse_index_links(index_content: str) -> set[str]:
 
 
 def check_index_sync(pages: list[Path]) -> dict:
-    """Compare wiki/index.md entries against actual files on disk.
+    """Compare knowledge/wiki/index.md entries against actual files on disk.
 
     Returns:
         {
@@ -147,7 +147,7 @@ def _parse_log_entries(log_content: str) -> set[str]:
 def check_log_coverage(pages: list[Path]) -> list[dict]:
     """Find source pages that have no corresponding ingest entry in log.md.
 
-    Only checks wiki/sources/*.md — entity/concept pages are created as
+    Only checks knowledge/wiki/sources/*.md — entity/concept pages are created as
     side-effects of ingest and don't need their own log entry.
     """
     log_content = read_file(LOG_FILE)
@@ -261,7 +261,7 @@ if __name__ == "__main__":
         description="Structural health checks for the LLM Wiki (deterministic, no LLM calls)"
     )
     parser.add_argument("--save", action="store_true",
-                        help="Save report to wiki/health-report.md")
+                        help="Save report to knowledge/wiki/health-report.md")
     parser.add_argument("--json", action="store_true",
                         help="Output machine-readable JSON instead of markdown")
     args = parser.parse_args()

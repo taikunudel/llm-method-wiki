@@ -5,7 +5,7 @@ This wiki is maintained entirely by Gemini CLI. No API key or Python scripts nee
 ## How to Use
 
 Describe what you want in plain English:
-- *"Ingest this file: raw/papers/my-paper.md"*
+- *"Ingest this file: knowledge/raw/papers/my-paper.md"*
 - *"What does the wiki say about transformer models?"*
 - *"Check the wiki for orphan pages and contradictions"*
 - *"Build the knowledge graph"*
@@ -22,20 +22,24 @@ Or use shorthand triggers:
 ## Directory Layout
 
 ```
-raw/          # Immutable source documents — never modify these
-wiki/         # Agent owns this layer entirely
-  index.md    # Catalog of all pages — update on every ingest
-  log.md      # Append-only chronological record
-  overview.md # Living synthesis across all sources
-  sources/    # One summary page per source document
-  entities/   # People, companies, projects, products
-  concepts/   # Ideas, frameworks, methods, theories
-  syntheses/  # Saved query answers
-graph/        # Auto-generated graph data
-tools/        # Standalone Python scripts
-  health.py   # Structural checks (deterministic, no LLM calls)
-  lint.py     # Content quality checks (uses LLM for semantic analysis)
-  build_graph.py  # Knowledge graph generation
+knowledge/         # All knowledge-base content lives here
+  raw/             # Immutable source documents — never modify these
+  wiki/            # Agent owns this layer entirely
+    index.md       # Catalog of all pages — update on every ingest
+    log.md         # Append-only chronological record
+    overview.md    # Living synthesis across all sources
+    sources/       # One summary page per source document
+    entities/      # People, companies, projects, products
+    concepts/      # Ideas, frameworks, methods, theories
+    syntheses/     # Saved query answers
+  wiki-naive/      # Pre-regenerated comparison snapshot
+  graph/           # Auto-generated graph data
+  logs/            # Ingest run logs
+  examples/        # Demo corpora (e.g. cjk-showcase/)
+tools/             # Standalone Python scripts
+  health.py        # Structural checks (deterministic, no LLM calls)
+  lint.py          # Content quality checks (uses LLM for semantic analysis)
+  build_graph.py   # Knowledge graph generation
 ```
 
 ---
@@ -65,13 +69,13 @@ Triggered by: *"ingest <file>"*
 **Supported formats:** `.md` ingested directly. Non-markdown files (`.pdf`, `.docx`, `.pptx`, `.xlsx`, `.html`, `.txt`, `.csv`, `.json`, `.xml`, `.rst`, `.rtf`, `.epub`, `.ipynb`, `.yaml`, `.yml`, `.tsv`, `.wav`, `.mp3`) auto-converted via markitdown. Use `--no-convert` to skip.
 
 1. Read the source document fully (auto-convert if non-markdown)
-2. Read `wiki/index.md` and `wiki/overview.md` for current wiki context
-3. Write `wiki/sources/<slug>.md` (source page format below)
-4. Update `wiki/index.md` — add entry under Sources
-5. Update `wiki/overview.md` — revise synthesis if warranted
+2. Read `knowledge/wiki/index.md` and `knowledge/wiki/overview.md` for current wiki context
+3. Write `knowledge/wiki/sources/<slug>.md` (source page format below)
+4. Update `knowledge/wiki/index.md` — add entry under Sources
+5. Update `knowledge/wiki/overview.md` — revise synthesis if warranted
 6. Update/create entity and concept pages
 7. Flag contradictions with existing wiki content
-8. Append to `wiki/log.md`: `## [YYYY-MM-DD] ingest | <Title>`
+8. Append to `knowledge/wiki/log.md`: `## [YYYY-MM-DD] ingest | <Title>`
 9. **Post-ingest validation** — check for broken `[[wikilinks]]`, verify all new pages are in `index.md`, print a change summary
 
 ### Source Page Format
@@ -82,7 +86,7 @@ title: "Source Title"
 type: source
 tags: []
 date: YYYY-MM-DD
-source_file: raw/...
+source_file: knowledge/raw/...
 ---
 
 ## Summary
@@ -149,10 +153,10 @@ date: YYYY-MM-DD
 
 Triggered by: *"query: <question>"*
 
-1. Read `wiki/index.md` — identify relevant pages
+1. Read `knowledge/wiki/index.md` — identify relevant pages
 2. Read those pages
 3. Synthesize answer with `[[PageName]]` citations
-4. Offer to save as `wiki/syntheses/<slug>.md`
+4. Offer to save as `knowledge/wiki/syntheses/<slug>.md`
 
 ---
 
@@ -174,10 +178,10 @@ Run: `python tools/health.py` (or `python tools/health.py --json` for machine-re
 
 Fast structural integrity checks — **zero LLM calls**, safe to run every session:
 - **Empty / stub files** — pages with no content beyond frontmatter (rate-limit damage)
-- **Index sync** — `wiki/index.md` entries vs actual files on disk
-- **Log coverage** — source pages missing a corresponding `ingest` entry in `wiki/log.md`
+- **Index sync** — `knowledge/wiki/index.md` entries vs actual files on disk
+- **Log coverage** — source pages missing a corresponding `ingest` entry in `knowledge/wiki/log.md`
 
-Output a health report. Use `--save` to write to `wiki/health-report.md`.
+Output a health report. Use `--save` to write to `knowledge/wiki/health-report.md`.
 
 ### Health vs Lint Boundary
 
