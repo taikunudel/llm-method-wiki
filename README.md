@@ -2,6 +2,108 @@
 
 > **A method-aware knowledge base that coding agents consult *before* writing model code — not a summary wiki they read for context.**
 
+## Setup — wire this wiki into your agent's workspace
+
+**This is the step most people miss.** Cloning this repo is not enough on its own. Your agent only reads what its workspace's schema file (`AGENTS.md` / `CLAUDE.md` / `GEMINI.md` — the one in your *workspace root*, **not** the one inside this repo) tells it to read. Until you paste the **Knowledge Base — Required** block (below) into that workspace file, the agent has no idea this wiki exists, and dropping papers into `knowledge/raw/` accomplishes nothing.
+
+### Why there are two `AGENTS.md` files (and why the inside one is not enough)
+
+After Step 1 below, you will have two similarly-named schema files on disk:
+
+| File | Scope | What it controls |
+|---|---|---|
+| `llm-wiki-agent/AGENTS.md` (**inside** this repo) | Loaded only when an agent is working *inside the wiki repo itself* | Defines how to maintain the wiki — the ingest / query / lint / graph workflows. |
+| `~/.openclaw/workspace/AGENTS.md` (**outside**, in your workspace root) | Loaded on **every** agent session in your workspace, for any project | Your workspace's general agent config. **This is the file you must modify.** Without the Knowledge Base block here, agents working on your *other* projects do not know this wiki exists. |
+
+If you only have the inside `AGENTS.md`, the agent only reads the wiki rules when it happens to be working inside the wiki repo — which is never useful, because the whole point is for the wiki to be *consulted from outside* on modeling tasks for unrelated projects.
+
+### Step 1 — Clone this repo into your workspace
+
+```bash
+cd ~/.openclaw/workspace          # or wherever your agent's workspace lives
+git clone https://github.com/taikunudel/llm-method-wiki llm-wiki-agent
+```
+
+The folder name `llm-wiki-agent` is what the block below expects. If you choose another name, change every `llm-wiki-agent/` path in the block to match.
+
+### Step 2 — Paste the Knowledge Base block into your *workspace* schema file
+
+Which file to edit depends on the agent harness you use:
+
+| Your agent harness | Edit this file |
+|---|---|
+| OpenClaw / Codex / OpenCode / any `AGENTS.md`-aware harness | `~/.openclaw/workspace/AGENTS.md` |
+| Claude Code | `~/.openclaw/workspace/CLAUDE.md` |
+| Gemini CLI | `~/.openclaw/workspace/GEMINI.md` |
+
+Paste the following block anywhere near the top of that file (the literal block — the agent will read this verbatim, so do not edit the wording unless you understand what each rule does):
+
+```markdown
+## 📚 Knowledge Base — Required
+
+A local wiki at `llm-wiki-agent/knowledge/wiki/` is part of your task context.
+You **MUST** consult it before writing modeling, statistical, or
+domain-specific code. Skipping it is not allowed.
+
+**Required pre-task steps (in this order):**
+
+1. Read `llm-wiki-agent/knowledge/wiki/index.md` — the catalog of every page.
+2. For each domain term in your task, grep the wiki:
+   `grep -rli <term> llm-wiki-agent/knowledge/wiki/`.
+3. Read every matching page under `llm-wiki-agent/knowledge/wiki/sources/`,
+   `llm-wiki-agent/knowledge/wiki/concepts/`, and
+   `llm-wiki-agent/knowledge/wiki/examples/`.
+4. Before invoking any package call that has a corresponding wiki page,
+   read that page's `Argument Quirks` / `Failure Modes` / `Code Example`
+   sections.
+
+**Citation is mandatory:**
+
+- Every modeling or domain decision MUST cite the wiki page(s) that support
+  it via `[[PageName]]` in code comments AND in your trajectory's `cites`
+  array.
+- Empty `cites` on a substantive decision = task failure.
+- Prefer `llm-wiki-agent/knowledge/wiki/examples/*.R` snippets — copy
+  verbatim, then modify. Don't regenerate from training memory when an
+  example exists.
+
+**If the wiki has nothing relevant:** log a `gap_surfaced` event (see the
+optional Task Trajectory section further down in this README) and proceed,
+citing "no wiki support" — but only after you've actually checked.
+
+**Layout (so you know where to look):**
+
+- `llm-wiki-agent/knowledge/wiki/index.md`    — one-line catalog of every page (start here)
+- `llm-wiki-agent/knowledge/wiki/overview.md` — current synthesis across all sources
+- `llm-wiki-agent/knowledge/wiki/sources/`    — per-document summaries
+- `llm-wiki-agent/knowledge/wiki/concepts/`   — methods, frameworks, distributions
+- `llm-wiki-agent/knowledge/wiki/entities/`   — people, packages, organizations
+- `llm-wiki-agent/knowledge/wiki/examples/`   — runnable snippets per method
+
+The wiki captures package-specific gotchas, paper-recommended hyperparameters,
+and silent-failure modes that aren't in your training data. Reading it is the
+difference between "code that runs" and "code that runs correctly." This is
+not optional.
+```
+
+### Step 3 — Verify it worked
+
+Start a fresh agent session in your workspace (not inside the wiki repo — somewhere your agent normally works, like a project folder). Ask the agent a domain question that the seeded wiki covers, for example:
+
+> *"What are the failure modes of HDtweedie?"*
+
+If the block was loaded correctly, the agent will read pages from `llm-wiki-agent/knowledge/wiki/` and **cite them in its answer using `[[PageName]]` wikilinks** — for example `[[GroupedElasticNet]]`, `[[TweedieVariancePowerEstimation]]`. If you get a generic free-form answer with no citations, the block was not loaded — common causes:
+
+- The block was pasted into the wrong file (the *inside* one, not the outside one).
+- The agent session was started before the file was saved — restart it.
+- Your harness loads a different filename than the one you edited — check the harness documentation.
+
+### Step 4 (optional) — Enable trajectory logging for audit
+
+If you want to later audit *whether* the agent actually used the wiki (versus skipping it and claiming it didn't help), paste the `📋 Task Trajectory` block further down in this README into the same workspace schema file. It tells the agent to write JSON event logs as it works, which an auditor can cross-check against git history.
+
+---
+
 ## At a glance
 
 | You do | Claude Code does | The agent later does |
@@ -293,83 +395,15 @@ git checkout knowledge/wiki/index.md knowledge/wiki/log.md knowledge/wiki/overvi
 
 ## Using with other agents (openclaw, Codex, Gemini)
 
-The schema files are mirrored across three filenames so the same wiki works under any harness:
+This wiki's schema files (the ones *inside* this repo) are mirrored across three filenames so the same wiki works under any harness:
 
 | Harness | Schema file it loads on session start |
 |---|---|
 | Claude Code | `CLAUDE.md` |
-| Codex / OpenCode / any AGENTS.md-aware harness | `AGENTS.md` |
+| Codex / OpenCode / any `AGENTS.md`-aware harness | `AGENTS.md` |
 | Gemini CLI | `GEMINI.md` |
 
-All three files carry identical content. To make a sibling agent treat this wiki as required reading:
-
-1. Clone this repo into the agent's workspace (next to the project the agent works on).
-2. Paste the **Knowledge Base** block (below) into the workspace's own schema file.
-3. *(Optional)* Paste the **Task Trajectory** block to enable audit logging of which wiki pages the agent actually read.
-
-<details>
-<summary>Integration block — paste into your workspace's <code>AGENTS.md</code> (click to expand)</summary>
-
-Clone the repo into your agent's workspace so the wiki sits next to your work:
-
-```bash
-cd ~/.openclaw/workspace          # or wherever your agent's workspace lives
-git clone https://github.com/taikunudel/llm-method-wiki llm-wiki-agent
-```
-
-(The folder name `llm-wiki-agent` is what the snippet below expects. If you prefer another name, change every `llm-wiki-agent/` path to match.)
-
-Then paste this block into the workspace's `AGENTS.md` (and/or `CLAUDE.md`, `GEMINI.md` — whichever your harness loads), anywhere near the top:
-
-```markdown
-## 📚 Knowledge Base — Required
-
-A local wiki at `llm-wiki-agent/knowledge/wiki/` is part of your task context.
-You **MUST** consult it before writing modeling, statistical, or
-domain-specific code. Skipping it is not allowed.
-
-**Required pre-task steps (in this order):**
-
-1. Read `llm-wiki-agent/knowledge/wiki/index.md` — the catalog of every page.
-2. For each domain term in your task, grep the wiki:
-   `grep -rli <term> llm-wiki-agent/knowledge/wiki/`.
-3. Read every matching page under `knowledge/wiki/sources/`, `knowledge/wiki/concepts/`,
-   and `knowledge/wiki/examples/`.
-4. Before invoking any package call that has a corresponding wiki
-   page, read that page's `Argument Quirks` / `Failure Modes` /
-   `Code Example` sections.
-
-**Citation is mandatory:**
-
-- Every modeling or domain decision MUST cite the wiki page(s) that
-  support it via `[[PageName]]` in code comments AND in your
-  trajectory's `cites` array.
-- Empty `cites` on a substantive decision = task failure.
-- Prefer `knowledge/wiki/examples/*.R` snippets — copy verbatim, then modify.
-  Don't regenerate from training memory when an example exists.
-
-**If the wiki has nothing relevant:** log a `gap_surfaced` event
-(see Task Trajectory below) and proceed, citing "no wiki support" —
-but only after you've actually checked.
-
-**Layout (so you know where to look):**
-
-- `index.md`   — one-line catalog of every page (start here)
-- `overview.md` — current synthesis across all sources
-- `sources/`   — per-document summaries
-- `concepts/`  — methods, frameworks, distributions
-- `entities/`  — people, packages, organizations
-- `examples/`  — runnable snippets per method
-
-The wiki captures package-specific gotchas, paper-recommended
-hyperparameters, and silent-failure modes that aren't in your training
-data. Reading it is the difference between "code that runs" and "code
-that runs correctly." This is not optional.
-```
-
-The next session your agent loads `AGENTS.md`, it will know the wiki is required reading, where to find the catalog, and that citations are mandatory.
-
-</details>
+These inside files define how the wiki gets maintained. They do **not** by themselves make your agent consult the wiki on tasks for other projects — that requires editing your *workspace* schema file as described in [Setup](#setup--wire-this-wiki-into-your-agents-workspace) at the top of this README.
 
 <details>
 <summary>Optional: trajectory logging for audit (click to expand)</summary>
