@@ -182,7 +182,7 @@
       "type": "source",
       "color": "#E91E63",
       "path": "knowledge/wiki/sources/zhang-2013-cplm.md",
-      "markdown": "---\ntitle: \"Likelihood-based and Bayesian Methods for Tweedie Compound Poisson Linear Mixed Models\"\ntype: source\ntags: [method, cplm, tweedie, mixed-models, bayesian]\ndate: 2013-01-01\nsource_file: raw/papers/zhang-2013-cplm.md\n---\n\n## Summary\nZhang derives four likelihood-based and Bayesian estimation methods for Tweedie compound-Poisson linear mixed models (CPLMM): Laplace approximation, adaptive Gauss–Hermite quadrature (AGQ), Monte Carlo EM (MCEM), and MCMC. Unlike penalized quasi-likelihood (PQL), all of these enable estimation of the variance power `p` from the data — which the paper shows has large impact on dispersion estimates and downstream uncertainty. Implemented as the R package `cplm`, which also ships the `AutoClaim` dataset used in every benchmark in `archive/`.\n\n## Canonical API\n```R\nlibrary(cplm)\n\n# Fixed-effects-only Tweedie GLM (estimates p)\nfit_glm <- cpglm(\n  formula = CLM_AMT ~ AGE + BLUEBOOK + INCOME + MVR_PTS + AREA,\n  data    = train,\n  link    = \"log\"\n  # p is estimated by default; pass p = 1.5 to fix\n)\n\n# Mixed model — random intercept by some grouping factor\nfit_mm <- cpglmm(\n  formula  = CLM_AMT ~ AGE + BLUEBOOK + (1 | AREA),\n  data     = train,\n  link     = \"log\",\n  optimizer = \"nlminb\"\n)\n\n# Bayesian — MCMC\nfit_bayes <- bcplm(\n  formula  = CLM_AMT ~ AGE + BLUEBOOK + (1 | AREA),\n  data     = train,\n  n.chains = 3,\n  n.iter   = 10000,\n  n.burnin = 2000\n)\n\n# Gini evaluation\ncplm::gini(loss = test$CLM_AMT,\n           score = predict(fit_glm, newdata = test, type = \"response\"),\n           baseline = mean(train$CLM_AMT))\n```\n\nEnd-to-end: `[[examples/zhang-2013-cplm]]`.\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| `link` | link function | `\"log\"` | `\"log\"` for claims | `\"log\"`, `\"identity\"` (rare) |\n| `p` (`var.power`) | variance power | estimated | estimate; if fixing, profile first | (1.05, 1.95) |\n| `optimizer` (in `cpglmm`) | mixed-model fit | `\"nlminb\"` | `\"nlminb\"` or `\"bobyqa\"` | both |\n| `nAGQ` (in `cpglmm`) | quadrature points | 1 (= Laplace) | 5–10 for better accuracy at cost of time | 1, 5, 10 |\n| `n.iter` (in `bcplm`) | MCMC iterations | 1000 | 10000+ for stable inference | 5000–50000 |\n| `n.chains` | MCMC chains | 1 | 3+ for convergence diagnostics | 3, 4 |\n\n## Argument Quirks\n- **`cpglm` estimates `p` by default** unless you pass `p` explicitly. `p.cpglm = NULL` triggers the profile.\n- The `cplm` family of fitters use `formula` notation with `(1 | group)` for random effects — same as `lme4`. Don't confuse with `nlme`'s `random = ~ 1 | group`.\n- `cpglm` returns S4; access slots with `@`, not `$`. Coefficients via `coef(fit)`, fitted values via `fitted(fit)`.\n- The `AutoClaim` dataset has `IN_YY` indicator for \"new customer\" — the benchmarks filter to `IN_YY == 1` (2,812 rows). Using all rows is also valid but changes the population.\n- `bcplm` priors are mildly informative by default; check `summary(fit_bayes)` Rhat and effective sample size before trusting results.\n\n## Failure Modes\n- **PQL is the silent failure mode this paper exists to fix.** If you fit a Tweedie mixed model and `p` is hardcoded, you have a PQL-equivalent model with all its bias. Always at least *profile* `p`.\n- MCEM is computationally expensive; for n > 100k consider Laplace + nAGQ instead.\n- Bayesian: poor MCMC mixing manifests as Rhat > 1.05 — increase iterations or reparameterize.\n- AGQ with `nAGQ > 1` fails when random effects are crossed (only nested allowed).\n\n## Code Example\nSee `[[examples/zhang-2013-cplm]]`.\n\n## Domain Pitfalls\n- `cplm::AutoClaim` is the canonical insurance benchmark. 2,812 rows × 28 features (filtered `IN_YY == 1`) is small — high-dimensional methods like HDtweedie are not really stressed here.\n- Estimating `p` matters: the paper shows that hardcoding `p = 1.5` vs `p = 1.7` shifts dispersion estimates by ~30% on real data, with downstream consequences for standard errors and Gini SEs.\n- The `cplm::gini()` interface is the reference implementation of [[frees-meyers-cummings-2011-gini]]'s metric — use it instead of rolling your own.\n\n## Connections\n- [[TweedieDistribution]] — distribution\n- [[GeneralizedLinearMixedModels]] — model class\n- [[LaplaceApproximation]] — estimation\n- [[AdaptiveGaussHermiteQuadrature]] — estimation\n- [[MonteCarloEM]] — estimation\n- [[MarkovChainMonteCarlo]] — Bayesian\n- [[AutoClaimDataset]] — canonical data\n- [[YanweiZhang]]\n\n## Contradictions\nNone with existing wiki content.\n",
+      "markdown": "---\ntitle: \"Likelihood-based and Bayesian Methods for Tweedie Compound Poisson Linear Mixed Models\"\ntype: source\ntags: [method, cplm, tweedie, mixed-models, bayesian]\ndate: 2013-01-01\nsource_file: knowledge/raw/papers/zhang-2013-cplm.md\n---\n\n## Summary\nZhang derives four likelihood-based and Bayesian estimation methods for Tweedie compound-Poisson linear mixed models (CPLMM): Laplace approximation, adaptive Gauss–Hermite quadrature (AGQ), Monte Carlo EM (MCEM), and MCMC. Unlike penalized quasi-likelihood (PQL), all of these enable estimation of the variance power `p` from the data — which the paper shows has large impact on dispersion estimates and downstream uncertainty. Implemented as the R package `cplm`, which also ships the `AutoClaim` dataset used in every benchmark in `archive/`.\n\n## Canonical API\n```R\nlibrary(cplm)\n\n# Fixed-effects-only Tweedie GLM (estimates p)\nfit_glm <- cpglm(\n  formula = CLM_AMT ~ AGE + BLUEBOOK + INCOME + MVR_PTS + AREA,\n  data    = train,\n  link    = \"log\"\n  # p is estimated by default; pass p = 1.5 to fix\n)\n\n# Mixed model — random intercept by some grouping factor\nfit_mm <- cpglmm(\n  formula  = CLM_AMT ~ AGE + BLUEBOOK + (1 | AREA),\n  data     = train,\n  link     = \"log\",\n  optimizer = \"nlminb\"\n)\n\n# Bayesian — MCMC\nfit_bayes <- bcplm(\n  formula  = CLM_AMT ~ AGE + BLUEBOOK + (1 | AREA),\n  data     = train,\n  n.chains = 3,\n  n.iter   = 10000,\n  n.burnin = 2000\n)\n\n# Gini evaluation\ncplm::gini(loss = test$CLM_AMT,\n           score = predict(fit_glm, newdata = test, type = \"response\"),\n           baseline = mean(train$CLM_AMT))\n```\n\nEnd-to-end: `[[examples/zhang-2013-cplm]]`.\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| `link` | link function | `\"log\"` | `\"log\"` for claims | `\"log\"`, `\"identity\"` (rare) |\n| `p` (`var.power`) | variance power | estimated | estimate; if fixing, profile first | (1.05, 1.95) |\n| `optimizer` (in `cpglmm`) | mixed-model fit | `\"nlminb\"` | `\"nlminb\"` or `\"bobyqa\"` | both |\n| `nAGQ` (in `cpglmm`) | quadrature points | 1 (= Laplace) | 5–10 for better accuracy at cost of time | 1, 5, 10 |\n| `n.iter` (in `bcplm`) | MCMC iterations | 1000 | 10000+ for stable inference | 5000–50000 |\n| `n.chains` | MCMC chains | 1 | 3+ for convergence diagnostics | 3, 4 |\n\n## Argument Quirks\n- **`cpglm` estimates `p` by default** unless you pass `p` explicitly. `p.cpglm = NULL` triggers the profile.\n- The `cplm` family of fitters use `formula` notation with `(1 | group)` for random effects — same as `lme4`. Don't confuse with `nlme`'s `random = ~ 1 | group`.\n- `cpglm` returns S4; access slots with `@`, not `$`. Coefficients via `coef(fit)`, fitted values via `fitted(fit)`.\n- The `AutoClaim` dataset has `IN_YY` indicator for \"new customer\" — the benchmarks filter to `IN_YY == 1` (2,812 rows). Using all rows is also valid but changes the population.\n- `bcplm` priors are mildly informative by default; check `summary(fit_bayes)` Rhat and effective sample size before trusting results.\n\n## Failure Modes\n- **PQL is the silent failure mode this paper exists to fix.** If you fit a Tweedie mixed model and `p` is hardcoded, you have a PQL-equivalent model with all its bias. Always at least *profile* `p`.\n- MCEM is computationally expensive; for n > 100k consider Laplace + nAGQ instead.\n- Bayesian: poor MCMC mixing manifests as Rhat > 1.05 — increase iterations or reparameterize.\n- AGQ with `nAGQ > 1` fails when random effects are crossed (only nested allowed).\n\n## Code Example\nSee `[[examples/zhang-2013-cplm]]`.\n\n## Domain Pitfalls\n- `cplm::AutoClaim` is the canonical insurance benchmark. 2,812 rows × 28 features (filtered `IN_YY == 1`) is small — high-dimensional methods like HDtweedie are not really stressed here.\n- Estimating `p` matters: the paper shows that hardcoding `p = 1.5` vs `p = 1.7` shifts dispersion estimates by ~30% on real data, with downstream consequences for standard errors and Gini SEs.\n- The `cplm::gini()` interface is the reference implementation of [[frees-meyers-cummings-2011-gini]]'s metric — use it instead of rolling your own.\n\n## Connections\n- [[TweedieDistribution]] — distribution\n- [[GeneralizedLinearMixedModels]] — model class\n- [[LaplaceApproximation]] — estimation\n- [[AdaptiveGaussHermiteQuadrature]] — estimation\n- [[MonteCarloEM]] — estimation\n- [[MarkovChainMonteCarlo]] — Bayesian\n- [[AutoClaimDataset]] — canonical data\n- [[YanweiZhang]]\n\n## Contradictions\nNone with existing wiki content.\n",
       "preview": "## Summary Zhang derives four likelihood-based and Bayesian estimation methods for Tweedie compound-Poisson linear mixed models (CPLMM): Laplace approximation, adaptive Gauss–Hermite quadrature (AGQ), Monte Carlo EM (MCE",
       "group": 0,
       "value": 7
@@ -193,7 +193,7 @@
       "type": "source",
       "color": "#8BC34A",
       "path": "knowledge/wiki/sources/dunn-smyth-2008-tweedie-fourier.md",
-      "markdown": "---\ntitle: \"Evaluation of Tweedie Exponential Dispersion Model Densities by Fourier Inversion\"\ntype: source\ntags: [method, tweedie, numerical, density]\ndate: 2008-08-17\nsource_file: raw/papers/dunn-smyth-2008-tweedie-fourier.md\n---\n\n## Summary\nDunn and Smyth provide a numerically reliable Fourier-inversion routine for evaluating Tweedie densities, which have no closed form for general `p ∉ {0, 1, 2, 3}`. The method uses Sidi's modified W-transformation to accelerate the highly oscillatory integral, combined with a rescaling identity that lets all evaluations be done at `y = µ = 1`. Complementary to the series-evaluation method (Dunn–Smyth 2005): each works best in different regions of `(p, y, φ)`. Together they cover the full parameter space to 10⁻¹⁰ accuracy. This is what powers `dtweedie()` in the `tweedie` R package.\n\n## Canonical API\n```R\nlibrary(tweedie)\n\n# Density evaluation\nd <- dtweedie(y = c(0, 1, 2.5),\n              mu = 1.0,\n              phi = 1.0,\n              power = 1.5)        # power = p, in (1, 2)\n\n# Profile likelihood for the variance power p — the canonical way to set p\nprof <- tweedie.profile(\n  formula  = CLM_AMT ~ AGE + BLUEBOOK + AREA,\n  data     = train,\n  p.vec    = seq(1.2, 1.8, by = 0.1),\n  do.plot  = TRUE,\n  link.power = 0,\n  method   = \"inversion\"          # Fourier-inversion; alt: \"series\", \"saddlepoint\", \"interpolation\"\n)\np_hat <- prof$p.max                # ML estimate of p\n```\n\nEnd-to-end: `[[examples/dunn-smyth-2008-tweedie-fourier]]`.\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| `power` (p) | variance power | none | profile via `tweedie.profile` | (1, 2) for compound Poisson |\n| `method` | density evaluation | `\"interpolation\"` | `\"inversion\"` for large y / p near 2; `\"series\"` for small y | both — check agreement |\n| `p.vec` | grid for `tweedie.profile` | 1.2, 1.3, ..., 1.8 | finer near optimum | 0.05 spacing |\n| `link.power` | link function | 0 = log | 0 | 0 |\n\n## Argument Quirks\n- **`dtweedie(y, mu, phi, power)` — argument order matters; `power` is the variance index, not a link power.** Confusingly, `tweedie()` family in `statmod` uses `var.power` for the same thing.\n- `method = \"series\"` fails when `y` is large or `phi` is small (terms in the infinite sum blow up before convergence). `method = \"inversion\"` is the safe fallback. The paper shows neither alone is universally accurate.\n- `tweedie.profile` is slow — each value of `p` requires a full GLM fit. Use coarse grid first, then refine.\n- `do.smooth = TRUE` (default) fits a quadratic to the profile; useful, but if the grid is too coarse the smoothed max is unreliable.\n\n## Failure Modes\n- **Density evaluation breaks near `p = 1` and `p = 2`** (boundary cases). Approach 1.05–1.95 if you need to be safe; outside that, you're at the boundary case (Poisson or Gamma) and should use those directly.\n- Subtractive cancellation in `method = \"series\"` for `p` close to 2 — symptom: density returns negative or NA.\n- `tweedie.profile` can return a flat profile if the data has no signal — interpret the maximum cautiously.\n\n## Code Example\nSee `[[examples/dunn-smyth-2008-tweedie-fourier]]`.\n\n## Domain Pitfalls\n- Industry practice often hardcodes `p = 1.5` or `p = 1.7`. The Dunn–Smyth machinery is **the** principled way to estimate `p` from your data, and it usually matters: in the benchmark `archive/auto-insurance-bench-*` the hardcoded `p = 1.7` is one of three candidate explanations for the cross-run Gini variance.\n- The paper's accuracy targets (10⁻¹⁰) far exceed what's needed for downstream GLM fitting (relative likelihood differences of 10⁻⁴ are inconsequential). Use `method = \"interpolation\"` for routine work; `\"inversion\"` only when other methods fail.\n\n## Connections\n- [[TweedieDistribution]] — what is being evaluated\n- [[FourierInversion]] — algorithmic technique\n- [[ProfileLikelihood]] — estimation of `p`\n- [[TweedieVariancePowerEstimation]] — domain procedure\n- [[PeterKDunn]], [[GordonKSmyth]]\n\n## Contradictions\nNone with existing wiki content. (The earlier wiki claimed contradiction with [[smyth-jorgensen-2002-tweedie-dispersion]] — that was an LLM hallucination; the two papers are complementary, not contradictory.)\n",
+      "markdown": "---\ntitle: \"Evaluation of Tweedie Exponential Dispersion Model Densities by Fourier Inversion\"\ntype: source\ntags: [method, tweedie, numerical, density]\ndate: 2008-08-17\nsource_file: knowledge/raw/papers/dunn-smyth-2008-tweedie-fourier.md\n---\n\n## Summary\nDunn and Smyth provide a numerically reliable Fourier-inversion routine for evaluating Tweedie densities, which have no closed form for general `p ∉ {0, 1, 2, 3}`. The method uses Sidi's modified W-transformation to accelerate the highly oscillatory integral, combined with a rescaling identity that lets all evaluations be done at `y = µ = 1`. Complementary to the series-evaluation method (Dunn–Smyth 2005): each works best in different regions of `(p, y, φ)`. Together they cover the full parameter space to 10⁻¹⁰ accuracy. This is what powers `dtweedie()` in the `tweedie` R package.\n\n## Canonical API\n```R\nlibrary(tweedie)\n\n# Density evaluation\nd <- dtweedie(y = c(0, 1, 2.5),\n              mu = 1.0,\n              phi = 1.0,\n              power = 1.5)        # power = p, in (1, 2)\n\n# Profile likelihood for the variance power p — the canonical way to set p\nprof <- tweedie.profile(\n  formula  = CLM_AMT ~ AGE + BLUEBOOK + AREA,\n  data     = train,\n  p.vec    = seq(1.2, 1.8, by = 0.1),\n  do.plot  = TRUE,\n  link.power = 0,\n  method   = \"inversion\"          # Fourier-inversion; alt: \"series\", \"saddlepoint\", \"interpolation\"\n)\np_hat <- prof$p.max                # ML estimate of p\n```\n\nEnd-to-end: `[[examples/dunn-smyth-2008-tweedie-fourier]]`.\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| `power` (p) | variance power | none | profile via `tweedie.profile` | (1, 2) for compound Poisson |\n| `method` | density evaluation | `\"interpolation\"` | `\"inversion\"` for large y / p near 2; `\"series\"` for small y | both — check agreement |\n| `p.vec` | grid for `tweedie.profile` | 1.2, 1.3, ..., 1.8 | finer near optimum | 0.05 spacing |\n| `link.power` | link function | 0 = log | 0 | 0 |\n\n## Argument Quirks\n- **`dtweedie(y, mu, phi, power)` — argument order matters; `power` is the variance index, not a link power.** Confusingly, `tweedie()` family in `statmod` uses `var.power` for the same thing.\n- `method = \"series\"` fails when `y` is large or `phi` is small (terms in the infinite sum blow up before convergence). `method = \"inversion\"` is the safe fallback. The paper shows neither alone is universally accurate.\n- `tweedie.profile` is slow — each value of `p` requires a full GLM fit. Use coarse grid first, then refine.\n- `do.smooth = TRUE` (default) fits a quadratic to the profile; useful, but if the grid is too coarse the smoothed max is unreliable.\n\n## Failure Modes\n- **Density evaluation breaks near `p = 1` and `p = 2`** (boundary cases). Approach 1.05–1.95 if you need to be safe; outside that, you're at the boundary case (Poisson or Gamma) and should use those directly.\n- Subtractive cancellation in `method = \"series\"` for `p` close to 2 — symptom: density returns negative or NA.\n- `tweedie.profile` can return a flat profile if the data has no signal — interpret the maximum cautiously.\n\n## Code Example\nSee `[[examples/dunn-smyth-2008-tweedie-fourier]]`.\n\n## Domain Pitfalls\n- Industry practice often hardcodes `p = 1.5` or `p = 1.7`. The Dunn–Smyth machinery is **the** principled way to estimate `p` from your data, and it usually matters: in the benchmark `archive/auto-insurance-bench-*` the hardcoded `p = 1.7` is one of three candidate explanations for the cross-run Gini variance.\n- The paper's accuracy targets (10⁻¹⁰) far exceed what's needed for downstream GLM fitting (relative likelihood differences of 10⁻⁴ are inconsequential). Use `method = \"interpolation\"` for routine work; `\"inversion\"` only when other methods fail.\n\n## Connections\n- [[TweedieDistribution]] — what is being evaluated\n- [[FourierInversion]] — algorithmic technique\n- [[ProfileLikelihood]] — estimation of `p`\n- [[TweedieVariancePowerEstimation]] — domain procedure\n- [[PeterKDunn]], [[GordonKSmyth]]\n\n## Contradictions\nNone with existing wiki content. (The earlier wiki claimed contradiction with [[smyth-jorgensen-2002-tweedie-dispersion]] — that was an LLM hallucination; the two papers are complementary, not contradictory.)\n",
       "preview": "## Summary Dunn and Smyth provide a numerically reliable Fourier-inversion routine for evaluating Tweedie densities, which have no closed form for general `p ∉ {0, 1, 2, 3}`. The method uses Sidi's modified W-transformat",
       "group": 2,
       "value": 7
@@ -204,7 +204,7 @@
       "type": "source",
       "color": "#8BC34A",
       "path": "knowledge/wiki/sources/delong-lindholm-wuthrich-2021-tweedie.md",
-      "markdown": "---\ntitle: \"Making Tweedie's Compound Poisson Model More Accessible\"\ntype: source\ntags: [method, tweedie, dglm, neural-network, insurance]\ndate: 2021-02-13\nsource_file: raw/papers/delong-lindholm-wuthrich-2021-tweedie.md\n---\n\n## Summary\nDelong, Lindholm, and Wüthrich revisit the choice between two equivalent parametrizations of the compound Poisson–gamma model: the *Poisson–Gamma* (two separate GLMs for frequency and severity) and the *Tweedie EDF* (one DGLM). Industry typically prefers Poisson–Gamma; the paper derives conditions under which the two give identical predictions, presents a new theorem that cuts computational cost of Tweedie's DGLM, and through GLM + neural-network examples shows that Poisson–Gamma is easier to calibrate and more robust — especially when extending to neural networks.\n\n## Canonical API\n```R\n# ===== Approach A: Poisson-Gamma (two separate GLMs) =====\nlibrary(statmod)\n\n# 1) Frequency (Poisson on claim counts, exposure offset)\nfit_freq <- glm(\n  N ~ AGE + BLUEBOOK + AREA + offset(log(EXPOSURE)),\n  data   = train,\n  family = poisson(link = \"log\")\n)\n\n# 2) Severity (gamma on average claim size, conditional on N > 0)\nfit_sev <- glm(\n  CLM_AMT_PER_CLAIM ~ AGE + BLUEBOOK + AREA,\n  data   = subset(train, N > 0),\n  family = Gamma(link = \"log\"),\n  weights = N                                   # # of claims as weight\n)\n\n# Pure premium prediction\npred_pp <- predict(fit_freq, newdata = test, type = \"response\") *\n           predict(fit_sev,  newdata = test, type = \"response\")\n\n# ===== Approach B: Tweedie DGLM (single model) =====\n# See [[smyth-jorgensen-2002-tweedie-dispersion]] for dglm() example\n```\n\nEnd-to-end: `[[examples/delong-lindholm-wuthrich-2021-tweedie]]`.\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| parametrization | Poisson-Gamma vs Tweedie DGLM | — | **Poisson-Gamma** for robustness, esp. with NNs | both — compare |\n| frequency link | for Poisson GLM | log | log | log |\n| severity link | for gamma GLM | inverse | **log** (matches Tweedie identity result) | log |\n| `offset(log(exposure))` | exposure for Poisson | required | required | — |\n| `weights = N` | for severity GLM | required (when y is per-claim) | required | — |\n\n## Argument Quirks\n- The paper's main theorem (Theorem 3.6/3.8): Poisson–Gamma with log links on both parts is *identical in distribution* to Tweedie DGLM under a specific covariate-space alignment. In practice, this rarely holds exactly because covariates are pre-processed differently for frequency and severity — which is fine and often desirable.\n- Severity GLM **must condition on `N > 0`**. Including zero-claim rows breaks the gamma likelihood.\n- Severity response is *average* claim size = `CLM_AMT / N`. Weight by `N` so the GLM treats it as a weighted observation.\n- For neural network extensions: the paper's evidence is that fitting two separate networks (one for frequency, one for severity) is more stable than fitting a single Tweedie-loss network, because Tweedie's loss surface is harder.\n\n## Failure Modes\n- Poisson–Gamma: if you forget `weights = N` in the severity model, large-N policies are underweighted and predictions bias low for high-frequency segments.\n- Tweedie DGLM: dispersion submodel is unstable when claim counts are very low (most data) — the unit deviances become noisy.\n- Identity theorem fails silently if covariate transforms differ between frequency and severity (e.g., log-transform applied to one but not the other).\n\n## Code Example\nSee `[[examples/delong-lindholm-wuthrich-2021-tweedie]]`.\n\n## Domain Pitfalls\n- The benchmark `archive/auto-insurance-bench-*` uses Tweedie-only models. This paper argues that running Poisson–Gamma alongside is the industry baseline — and worth including as a 6th model in the comparison.\n- \"Adverse selection\" framing (also in [[frees-meyers-cummings-2011-gini]]) is the economic reason any of this matters.\n- Neural network extensions: if you go beyond GLM, the paper strongly recommends Poisson + gamma networks over a single Tweedie-loss network. Tweedie loss with neural networks has known training instability around the boundary cases of `p`.\n\n## Connections\n- [[PoissonGamma]] — alternative parametrization\n- [[TweedieDistribution]] — distribution\n- [[DoubleGeneralizedLinearModels]] — DGLM approach\n- [[NeuralNetworks]] — discussed extension\n- [[FrequencySeverityDecomposition]] — domain framing\n- [[LukaszDelong]], [[MathiasLindholm]], [[MarioVWuthrich]]\n\n## Contradictions\nNone with existing wiki content. (The earlier wiki claimed \"contradicts previous claims about traditional GLM superiority\" — that was an LLM hallucination; this paper is descriptive comparison, not a claim of superiority.)\n",
+      "markdown": "---\ntitle: \"Making Tweedie's Compound Poisson Model More Accessible\"\ntype: source\ntags: [method, tweedie, dglm, neural-network, insurance]\ndate: 2021-02-13\nsource_file: knowledge/raw/papers/delong-lindholm-wuthrich-2021-tweedie.md\n---\n\n## Summary\nDelong, Lindholm, and Wüthrich revisit the choice between two equivalent parametrizations of the compound Poisson–gamma model: the *Poisson–Gamma* (two separate GLMs for frequency and severity) and the *Tweedie EDF* (one DGLM). Industry typically prefers Poisson–Gamma; the paper derives conditions under which the two give identical predictions, presents a new theorem that cuts computational cost of Tweedie's DGLM, and through GLM + neural-network examples shows that Poisson–Gamma is easier to calibrate and more robust — especially when extending to neural networks.\n\n## Canonical API\n```R\n# ===== Approach A: Poisson-Gamma (two separate GLMs) =====\nlibrary(statmod)\n\n# 1) Frequency (Poisson on claim counts, exposure offset)\nfit_freq <- glm(\n  N ~ AGE + BLUEBOOK + AREA + offset(log(EXPOSURE)),\n  data   = train,\n  family = poisson(link = \"log\")\n)\n\n# 2) Severity (gamma on average claim size, conditional on N > 0)\nfit_sev <- glm(\n  CLM_AMT_PER_CLAIM ~ AGE + BLUEBOOK + AREA,\n  data   = subset(train, N > 0),\n  family = Gamma(link = \"log\"),\n  weights = N                                   # # of claims as weight\n)\n\n# Pure premium prediction\npred_pp <- predict(fit_freq, newdata = test, type = \"response\") *\n           predict(fit_sev,  newdata = test, type = \"response\")\n\n# ===== Approach B: Tweedie DGLM (single model) =====\n# See [[smyth-jorgensen-2002-tweedie-dispersion]] for dglm() example\n```\n\nEnd-to-end: `[[examples/delong-lindholm-wuthrich-2021-tweedie]]`.\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| parametrization | Poisson-Gamma vs Tweedie DGLM | — | **Poisson-Gamma** for robustness, esp. with NNs | both — compare |\n| frequency link | for Poisson GLM | log | log | log |\n| severity link | for gamma GLM | inverse | **log** (matches Tweedie identity result) | log |\n| `offset(log(exposure))` | exposure for Poisson | required | required | — |\n| `weights = N` | for severity GLM | required (when y is per-claim) | required | — |\n\n## Argument Quirks\n- The paper's main theorem (Theorem 3.6/3.8): Poisson–Gamma with log links on both parts is *identical in distribution* to Tweedie DGLM under a specific covariate-space alignment. In practice, this rarely holds exactly because covariates are pre-processed differently for frequency and severity — which is fine and often desirable.\n- Severity GLM **must condition on `N > 0`**. Including zero-claim rows breaks the gamma likelihood.\n- Severity response is *average* claim size = `CLM_AMT / N`. Weight by `N` so the GLM treats it as a weighted observation.\n- For neural network extensions: the paper's evidence is that fitting two separate networks (one for frequency, one for severity) is more stable than fitting a single Tweedie-loss network, because Tweedie's loss surface is harder.\n\n## Failure Modes\n- Poisson–Gamma: if you forget `weights = N` in the severity model, large-N policies are underweighted and predictions bias low for high-frequency segments.\n- Tweedie DGLM: dispersion submodel is unstable when claim counts are very low (most data) — the unit deviances become noisy.\n- Identity theorem fails silently if covariate transforms differ between frequency and severity (e.g., log-transform applied to one but not the other).\n\n## Code Example\nSee `[[examples/delong-lindholm-wuthrich-2021-tweedie]]`.\n\n## Domain Pitfalls\n- The benchmark `archive/auto-insurance-bench-*` uses Tweedie-only models. This paper argues that running Poisson–Gamma alongside is the industry baseline — and worth including as a 6th model in the comparison.\n- \"Adverse selection\" framing (also in [[frees-meyers-cummings-2011-gini]]) is the economic reason any of this matters.\n- Neural network extensions: if you go beyond GLM, the paper strongly recommends Poisson + gamma networks over a single Tweedie-loss network. Tweedie loss with neural networks has known training instability around the boundary cases of `p`.\n\n## Connections\n- [[PoissonGamma]] — alternative parametrization\n- [[TweedieDistribution]] — distribution\n- [[DoubleGeneralizedLinearModels]] — DGLM approach\n- [[NeuralNetworks]] — discussed extension\n- [[FrequencySeverityDecomposition]] — domain framing\n- [[LukaszDelong]], [[MathiasLindholm]], [[MarioVWuthrich]]\n\n## Contradictions\nNone with existing wiki content. (The earlier wiki claimed \"contradicts previous claims about traditional GLM superiority\" — that was an LLM hallucination; this paper is descriptive comparison, not a claim of superiority.)\n",
       "preview": "## Summary Delong, Lindholm, and Wüthrich revisit the choice between two equivalent parametrizations of the compound Poisson–gamma model: the *Poisson–Gamma* (two separate GLMs for frequency and severity) and the *Tweedi",
       "group": 2,
       "value": 13
@@ -215,7 +215,7 @@
       "type": "source",
       "color": "#E91E63",
       "path": "knowledge/wiki/sources/qian-2016-hdtweedie.md",
-      "markdown": "---\ntitle: \"Tweedie's Compound Poisson Model With Grouped Elastic Net\"\ntype: source\ntags: [method, HDtweedie, tweedie, regularization, insurance]\ndate: 2016-05-01\nsource_file: raw/papers/qian-2016-hdtweedie.md\n---\n\n## Summary\nQian, Yang, and Zou propose a grouped elastic net penalty for Tweedie GLMs and implement it in the R package `HDtweedie`. The algorithm is a two-layer loop: an outer Iteratively Reweighted Least Squares (IRLS) wrapping an inner Blockwise Majorization Descent (BMD). Integrates the \"strong rule\" for path speedup. Designed for high-dimensional insurance pricing where many correlated predictors and dummy-coded categoricals are present.\n\n## Canonical API\n```R\nlibrary(HDtweedie)\n\n# x: numeric design matrix (NO intercept column, NO factor columns — pre-expand)\n# group: integer vector of length ncol(x), giving group index per column\n# y: nonnegative response (claim amount, exposure-adjusted)\ncv_fit <- cv.HDtweedie(\n  x      = x_train,\n  y      = y_train,\n  group  = group_vec,\n  p      = 1.5,        # Tweedie variance power, in (1, 2)\n  alpha  = 0.7,        # mixing: 1 = grouped lasso, 0 = grouped ridge\n  weights = NULL,      # default 1/n per obs; pass exposures if needed\n  nfolds = 5\n)\n\n# Prediction REQUIRES the s= argument — see Argument Quirks\ny_hat <- predict(cv_fit, newx = x_test, s = \"lambda.min\", type = \"response\")\n\n# Active set\nbeta_hat <- coef(cv_fit, s = \"lambda.min\")\nn_active <- sum(beta_hat != 0) - 1   # exclude intercept\n```\n\nSee `[[examples/qian-2016-hdtweedie]]` for the full pipeline against `cplm::AutoClaim`.\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| `p` | Tweedie variance power | 1.5 | profile via `tweedie.profile`; never hardcode | {1.3, 1.5, 1.7} |\n| `alpha` (τ in paper) | L1/L2 mix, `0 < α ≤ 1` | 1 (pure grouped lasso) | 0.5–0.7 when predictors are correlated | {0.5, 0.7, 1.0} |\n| `group` | grouping vector | none — required | one block per categorical (all dummies together); polynomial terms grouped per base variable | — |\n| `nfolds` | CV folds | 5 | 5–10 | 5, 10 |\n| `weights` (v_i) | obs weights | `1/n` | exposure-proportional in actuarial use | — |\n| `pf` (paper's w_j) | group penalty weights | `sqrt(p_j)` | leave default unless adaptive weighting | — |\n\n## Argument Quirks\n- **`x` must be a numeric matrix with no intercept column.** `cv.HDtweedie` adds the intercept internally. Passing `model.matrix(~ .)` directly will include an unpenalized intercept column that breaks groups.\n- **Factor columns are not accepted.** Convert to dummies first (`model.matrix(~ . - 1)`), then build `group` to keep all dummies of one factor in the same block.\n- **`predict.cv.HDtweedie` silently returns a matrix of all-lambda predictions when `s` is omitted.** Always pass `s = \"lambda.min\"` (or `\"lambda.1se\"`). The benchmark scripts in `archive/auto-insurance-bench-*` get this right, but it is a common slip.\n- `type = \"response\"` returns predictions on the original (mean) scale. `type = \"link\"` returns the linear predictor.\n- Strong rule activates by default; turn off with `strong = FALSE` only for debugging.\n\n## Failure Modes\n- **Silent crash** when test set contains factor levels unseen in train — caller must drop or re-bucket them before forming the dummy matrix.\n- Convergence failure when p is too close to 1 or 2 — keep p in (1.05, 1.95).\n- Cross-validation can be unstable when claim distribution is very sparse (>95% zeros); use larger `nfolds` or stratified folds in that case.\n- Group sizes that vary by 10× or more bias selection. Default penalty weight `sqrt(p_j)` partially corrects; adaptive weights help more.\n\n## Code Example\nSee `[[examples/qian-2016-hdtweedie]]`.\n\n## Domain Pitfalls\n- **Group construction is the single most common error.** For a categorical with K levels, group ALL K-1 dummies into one block. For a polynomial expansion (e.g., AGE, AGE², AGE³), group all three terms.\n- Polynomial expansion: scale the base variable first, then expand. Expanding raw years and then scaling breaks the orthogonality that the optimizer assumes.\n- Exposure: pass via `weights`; never include `offset(log(exposure))` (the package does not parse offsets in formulas — it takes a matrix).\n- The benchmark scripts use `group_vec <- 1:n_cols` (each column its own group) which **collapses the method to ordinary elastic net** — a separate issue worth fixing in `archive/auto-insurance-bench-*`.\n\n## Connections\n- [[GroupedElasticNet]] — core method\n- [[IRLS-BMD]] — algorithm\n- [[TweedieDistribution]] — distribution\n- [[StrongRule]] — speedup\n- [[WeiQian]], [[YiYang]], [[HuiZou]]\n\n## Contradictions\nNone with existing wiki content.\n",
+      "markdown": "---\ntitle: \"Tweedie's Compound Poisson Model With Grouped Elastic Net\"\ntype: source\ntags: [method, HDtweedie, tweedie, regularization, insurance]\ndate: 2016-05-01\nsource_file: knowledge/raw/papers/qian-2016-hdtweedie.md\n---\n\n## Summary\nQian, Yang, and Zou propose a grouped elastic net penalty for Tweedie GLMs and implement it in the R package `HDtweedie`. The algorithm is a two-layer loop: an outer Iteratively Reweighted Least Squares (IRLS) wrapping an inner Blockwise Majorization Descent (BMD). Integrates the \"strong rule\" for path speedup. Designed for high-dimensional insurance pricing where many correlated predictors and dummy-coded categoricals are present.\n\n## Canonical API\n```R\nlibrary(HDtweedie)\n\n# x: numeric design matrix (NO intercept column, NO factor columns — pre-expand)\n# group: integer vector of length ncol(x), giving group index per column\n# y: nonnegative response (claim amount, exposure-adjusted)\ncv_fit <- cv.HDtweedie(\n  x      = x_train,\n  y      = y_train,\n  group  = group_vec,\n  p      = 1.5,        # Tweedie variance power, in (1, 2)\n  alpha  = 0.7,        # mixing: 1 = grouped lasso, 0 = grouped ridge\n  weights = NULL,      # default 1/n per obs; pass exposures if needed\n  nfolds = 5\n)\n\n# Prediction REQUIRES the s= argument — see Argument Quirks\ny_hat <- predict(cv_fit, newx = x_test, s = \"lambda.min\", type = \"response\")\n\n# Active set\nbeta_hat <- coef(cv_fit, s = \"lambda.min\")\nn_active <- sum(beta_hat != 0) - 1   # exclude intercept\n```\n\nSee `[[examples/qian-2016-hdtweedie]]` for the full pipeline against `cplm::AutoClaim`.\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| `p` | Tweedie variance power | 1.5 | profile via `tweedie.profile`; never hardcode | {1.3, 1.5, 1.7} |\n| `alpha` (τ in paper) | L1/L2 mix, `0 < α ≤ 1` | 1 (pure grouped lasso) | 0.5–0.7 when predictors are correlated | {0.5, 0.7, 1.0} |\n| `group` | grouping vector | none — required | one block per categorical (all dummies together); polynomial terms grouped per base variable | — |\n| `nfolds` | CV folds | 5 | 5–10 | 5, 10 |\n| `weights` (v_i) | obs weights | `1/n` | exposure-proportional in actuarial use | — |\n| `pf` (paper's w_j) | group penalty weights | `sqrt(p_j)` | leave default unless adaptive weighting | — |\n\n## Argument Quirks\n- **`x` must be a numeric matrix with no intercept column.** `cv.HDtweedie` adds the intercept internally. Passing `model.matrix(~ .)` directly will include an unpenalized intercept column that breaks groups.\n- **Factor columns are not accepted.** Convert to dummies first (`model.matrix(~ . - 1)`), then build `group` to keep all dummies of one factor in the same block.\n- **`predict.cv.HDtweedie` silently returns a matrix of all-lambda predictions when `s` is omitted.** Always pass `s = \"lambda.min\"` (or `\"lambda.1se\"`). The benchmark scripts in `archive/auto-insurance-bench-*` get this right, but it is a common slip.\n- `type = \"response\"` returns predictions on the original (mean) scale. `type = \"link\"` returns the linear predictor.\n- Strong rule activates by default; turn off with `strong = FALSE` only for debugging.\n\n## Failure Modes\n- **Silent crash** when test set contains factor levels unseen in train — caller must drop or re-bucket them before forming the dummy matrix.\n- Convergence failure when p is too close to 1 or 2 — keep p in (1.05, 1.95).\n- Cross-validation can be unstable when claim distribution is very sparse (>95% zeros); use larger `nfolds` or stratified folds in that case.\n- Group sizes that vary by 10× or more bias selection. Default penalty weight `sqrt(p_j)` partially corrects; adaptive weights help more.\n\n## Code Example\nSee `[[examples/qian-2016-hdtweedie]]`.\n\n## Domain Pitfalls\n- **Group construction is the single most common error.** For a categorical with K levels, group ALL K-1 dummies into one block. For a polynomial expansion (e.g., AGE, AGE², AGE³), group all three terms.\n- Polynomial expansion: scale the base variable first, then expand. Expanding raw years and then scaling breaks the orthogonality that the optimizer assumes.\n- Exposure: pass via `weights`; never include `offset(log(exposure))` (the package does not parse offsets in formulas — it takes a matrix).\n- The benchmark scripts use `group_vec <- 1:n_cols` (each column its own group) which **collapses the method to ordinary elastic net** — a separate issue worth fixing in `archive/auto-insurance-bench-*`.\n\n## Connections\n- [[GroupedElasticNet]] — core method\n- [[IRLS-BMD]] — algorithm\n- [[TweedieDistribution]] — distribution\n- [[StrongRule]] — speedup\n- [[WeiQian]], [[YiYang]], [[HuiZou]]\n\n## Contradictions\nNone with existing wiki content.\n",
       "preview": "## Summary Qian, Yang, and Zou propose a grouped elastic net penalty for Tweedie GLMs and implement it in the R package `HDtweedie`. The algorithm is a two-layer loop: an outer Iteratively Reweighted Least Squares (IRLS)",
       "group": 0,
       "value": 7
@@ -226,7 +226,7 @@
       "type": "source",
       "color": "#FF5722",
       "path": "knowledge/wiki/sources/wood-2011-gam-reml.md",
-      "markdown": "---\ntitle: \"Fast Stable Restricted Maximum Likelihood and Marginal Likelihood Estimation of Semiparametric Generalized Linear Models\"\ntype: source\ntags: [method, mgcv, gam, smoothing, REML]\ndate: 2011-01-01\nsource_file: raw/papers/wood-2011-gam-reml.md\n---\n\n## Summary\nWood develops the first computationally stable, full-Newton method for *direct* GAM smoothness selection. Previous schemes (Performance Oriented Iteration, PQL) iteratively re-select smoothing parameters on working linear models and routinely fail to converge — especially with binary data or concurvity. The new method optimizes the whole-model criterion (REML, ML, GCV, or generalized AIC) with exact first and second derivatives. Implemented in `mgcv` as `method = \"REML\"`.\n\n## Canonical API\n```R\nlibrary(mgcv)\n\nfit <- gam(\n  formula = CLM_AMT ~ s(AGE, k = 10) + s(BLUEBOOK, k = 10) +\n                      s(INCOME, k = 10) + s(MVR_PTS, k = 5) +\n                      AREA,                       # factors enter directly\n  data    = train,\n  family  = Tweedie(p = 1.5, link = \"log\"),       # NOTE: capital-T Tweedie, mgcv's family\n  method  = \"REML\",                                # use REML, not GCV.Cp\n  select  = TRUE                                   # variable selection via shrinkage\n)\n\ny_hat <- predict(fit, newdata = test, type = \"response\")\nsummary(fit)         # smooth-term significance via approximate p-values\nplot(fit, pages = 1) # smooth function visualizations\n```\n\nEnd-to-end: `[[examples/wood-2011-gam-reml]]`.\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| `method` | smoothness selection criterion | `\"GCV.Cp\"` (legacy) | **`\"REML\"`** for stability | `\"REML\"`, `\"ML\"`, `\"GCV.Cp\"` |\n| `k` (per smooth) | basis dimension | 10 | start at 10; check via `gam.check` | 5, 10, 20 |\n| `bs` (per smooth) | spline basis type | `\"tp\"` (thin plate) | `\"tp\"` or `\"cr\"` (cubic regression) | `\"tp\"`, `\"cr\"`, `\"cs\"` |\n| `p` (Tweedie family) | variance power | 1.5 | estimate via `family = tw()` (estimates p automatically) | use `tw()` if uncertain |\n| `select` | variable selection via shrinkage | FALSE | TRUE for many smooth terms | TRUE |\n| `gamma` (penalty multiplier) | overfitting guard | 1 | 1.4 to bias toward smoother fits | {1, 1.4} |\n\n## Argument Quirks\n- **`Tweedie(p, link)` (capital T) is `mgcv`'s family** and requires a fixed `p`. **`tw()` (lowercase)** estimates `p` from the data — usually what you want.\n- `s(x, k = 10)` — `k` is the *maximum* basis dimension; the effective DF is shrunk by REML toward an interior optimum. After fitting, run `gam.check(fit)` — if k-index ≪ 1, raise `k`.\n- Factors **do not go inside `s(...)`** — they enter the formula directly. `s(AREA, by = MARITAL)` is a *varying-coefficient* construct, not a way to smooth a categorical.\n- `method = \"GCV.Cp\"` is the *legacy* default. Paper's whole point: this can silently fail. Always pass `method = \"REML\"` (or `\"ML\"`).\n- `predict.gam(..., type = \"response\")` returns mean-scale predictions; `\"link\"` returns the linear predictor.\n\n## Failure Modes\n- **Convergence cycle** (P-IRLS oscillates) — historically common with binary data; the REML/full-Newton method addresses this directly. If it still cycles, increase `gam.control(maxit = 200)`.\n- **`k` too small** — model underfits, smooths are stuck at low DF. Run `gam.check(fit)` and look at `k-index`.\n- **Concurvity** — when smooth terms are nearly collinear functions of other smooth terms. Detect with `concurvity(fit)`; remedy by dropping or combining terms.\n- For Tweedie, `family = tw()` can be sensitive to extreme zeros — large datasets with >95% zeros may need increased `epsilon` in `gam.control`.\n\n## Code Example\nSee `[[examples/wood-2011-gam-reml]]`.\n\n## Domain Pitfalls\n- GAM with `tw()` is the closest drop-in to \"Tweedie GLM with nonlinear effects.\" Often beats both the linear GLM and tree-boosted Tweedie when n is moderate and signal is smooth.\n- The benchmark `archive/auto-insurance-bench-*/procedures/02_tweedie_gam.R` uses `method = \"REML\"` (good) but hardcodes `p = 1.7` instead of using `tw()` (room to improve).\n- `s(longitude, latitude)` (tensor smooth) is the natural way to encode geographic factors that would otherwise be dummy-coded ZIP/region.\n\n## Connections\n- [[GeneralizedAdditiveModels]] — model class\n- [[REML]] — estimation criterion\n- [[PenalizedRegressionSplines]] — smooth representation\n- [[Concurvity]] — diagnostic\n- [[SimonNWood]]\n\n## Contradictions\nNone with existing wiki content.\n",
+      "markdown": "---\ntitle: \"Fast Stable Restricted Maximum Likelihood and Marginal Likelihood Estimation of Semiparametric Generalized Linear Models\"\ntype: source\ntags: [method, mgcv, gam, smoothing, REML]\ndate: 2011-01-01\nsource_file: knowledge/raw/papers/wood-2011-gam-reml.md\n---\n\n## Summary\nWood develops the first computationally stable, full-Newton method for *direct* GAM smoothness selection. Previous schemes (Performance Oriented Iteration, PQL) iteratively re-select smoothing parameters on working linear models and routinely fail to converge — especially with binary data or concurvity. The new method optimizes the whole-model criterion (REML, ML, GCV, or generalized AIC) with exact first and second derivatives. Implemented in `mgcv` as `method = \"REML\"`.\n\n## Canonical API\n```R\nlibrary(mgcv)\n\nfit <- gam(\n  formula = CLM_AMT ~ s(AGE, k = 10) + s(BLUEBOOK, k = 10) +\n                      s(INCOME, k = 10) + s(MVR_PTS, k = 5) +\n                      AREA,                       # factors enter directly\n  data    = train,\n  family  = Tweedie(p = 1.5, link = \"log\"),       # NOTE: capital-T Tweedie, mgcv's family\n  method  = \"REML\",                                # use REML, not GCV.Cp\n  select  = TRUE                                   # variable selection via shrinkage\n)\n\ny_hat <- predict(fit, newdata = test, type = \"response\")\nsummary(fit)         # smooth-term significance via approximate p-values\nplot(fit, pages = 1) # smooth function visualizations\n```\n\nEnd-to-end: `[[examples/wood-2011-gam-reml]]`.\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| `method` | smoothness selection criterion | `\"GCV.Cp\"` (legacy) | **`\"REML\"`** for stability | `\"REML\"`, `\"ML\"`, `\"GCV.Cp\"` |\n| `k` (per smooth) | basis dimension | 10 | start at 10; check via `gam.check` | 5, 10, 20 |\n| `bs` (per smooth) | spline basis type | `\"tp\"` (thin plate) | `\"tp\"` or `\"cr\"` (cubic regression) | `\"tp\"`, `\"cr\"`, `\"cs\"` |\n| `p` (Tweedie family) | variance power | 1.5 | estimate via `family = tw()` (estimates p automatically) | use `tw()` if uncertain |\n| `select` | variable selection via shrinkage | FALSE | TRUE for many smooth terms | TRUE |\n| `gamma` (penalty multiplier) | overfitting guard | 1 | 1.4 to bias toward smoother fits | {1, 1.4} |\n\n## Argument Quirks\n- **`Tweedie(p, link)` (capital T) is `mgcv`'s family** and requires a fixed `p`. **`tw()` (lowercase)** estimates `p` from the data — usually what you want.\n- `s(x, k = 10)` — `k` is the *maximum* basis dimension; the effective DF is shrunk by REML toward an interior optimum. After fitting, run `gam.check(fit)` — if k-index ≪ 1, raise `k`.\n- Factors **do not go inside `s(...)`** — they enter the formula directly. `s(AREA, by = MARITAL)` is a *varying-coefficient* construct, not a way to smooth a categorical.\n- `method = \"GCV.Cp\"` is the *legacy* default. Paper's whole point: this can silently fail. Always pass `method = \"REML\"` (or `\"ML\"`).\n- `predict.gam(..., type = \"response\")` returns mean-scale predictions; `\"link\"` returns the linear predictor.\n\n## Failure Modes\n- **Convergence cycle** (P-IRLS oscillates) — historically common with binary data; the REML/full-Newton method addresses this directly. If it still cycles, increase `gam.control(maxit = 200)`.\n- **`k` too small** — model underfits, smooths are stuck at low DF. Run `gam.check(fit)` and look at `k-index`.\n- **Concurvity** — when smooth terms are nearly collinear functions of other smooth terms. Detect with `concurvity(fit)`; remedy by dropping or combining terms.\n- For Tweedie, `family = tw()` can be sensitive to extreme zeros — large datasets with >95% zeros may need increased `epsilon` in `gam.control`.\n\n## Code Example\nSee `[[examples/wood-2011-gam-reml]]`.\n\n## Domain Pitfalls\n- GAM with `tw()` is the closest drop-in to \"Tweedie GLM with nonlinear effects.\" Often beats both the linear GLM and tree-boosted Tweedie when n is moderate and signal is smooth.\n- The benchmark `archive/auto-insurance-bench-*/procedures/02_tweedie_gam.R` uses `method = \"REML\"` (good) but hardcodes `p = 1.7` instead of using `tw()` (room to improve).\n- `s(longitude, latitude)` (tensor smooth) is the natural way to encode geographic factors that would otherwise be dummy-coded ZIP/region.\n\n## Connections\n- [[GeneralizedAdditiveModels]] — model class\n- [[REML]] — estimation criterion\n- [[PenalizedRegressionSplines]] — smooth representation\n- [[Concurvity]] — diagnostic\n- [[SimonNWood]]\n\n## Contradictions\nNone with existing wiki content.\n",
       "preview": "## Summary Wood develops the first computationally stable, full-Newton method for *direct* GAM smoothness selection. Previous schemes (Performance Oriented Iteration, PQL) iteratively re-select smoothing parameters on wo",
       "group": 3,
       "value": 4
@@ -237,7 +237,7 @@
       "type": "source",
       "color": "#E91E63",
       "path": "knowledge/wiki/sources/yang-2016-tdboost.md",
-      "markdown": "---\ntitle: \"Insurance Premium Prediction via Gradient Tree-Boosted Tweedie Compound Poisson Models\"\ntype: source\ntags: [method, TDboost, tweedie, boosting, insurance]\ndate: 2016-04-22\nsource_file: raw/papers/yang-2016-tdboost.md\n---\n\n## Summary\nYang, Qian, and Zou replace the linear log-mean structure of the Tweedie GLM with a flexible boosted-tree ensemble. The TDboost algorithm is forward-stagewise gradient boosting under the Tweedie negative log-likelihood. ρ (variance power) and φ (dispersion) are estimated by profile likelihood. The R package `TDboost` includes partial-dependence plots so the model is not a complete black box.\n\n## Canonical API\n```R\nlibrary(TDboost)\n\n# Profile-likelihood for rho (variance power) is INSIDE the package as\n# TDboost(distribution=list(name=\"EDM\", alpha=rho), ...) — alpha here means rho\nfit <- TDboost(\n  formula      = CLM_AMT ~ AGE + BLUEBOOK + MVR_PTS + AREA + ...,\n  data         = train,\n  distribution = list(name = \"EDM\", alpha = 1.5),   # alpha IS the variance power\n  n.trees      = 3000,\n  interaction.depth = 3,\n  shrinkage    = 0.005,                              # paper-recommended\n  bag.fraction = 0.5,\n  cv.folds     = 5,\n  keep.data    = FALSE\n)\n\n# Pick best iteration from CV\nbest_iter <- TDboost.perf(fit, method = \"cv\", plot.it = FALSE)\ny_hat     <- predict(fit, newdata = test, n.trees = best_iter, type = \"response\")\n\n# Interpretation\nrelative.influence(fit, n.trees = best_iter)         # variable importance\nplot(fit, i.var = \"AGE\", n.trees = best_iter)        # partial dependence\n```\n\nEnd-to-end: `[[examples/yang-2016-tdboost]]`.\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| `distribution$alpha` | variance power ρ, in (1, 2) | 1.5 | profile via inner loop | {1.3, 1.5, 1.7} |\n| `n.trees` | boosting rounds | 100 | 3000+ with `shrinkage = 0.005`; pick via `TDboost.perf` | 1000–5000 |\n| `shrinkage` (ν) | learning rate | 0.001 | **0.005** (paper) | 0.001, 0.005, 0.01 |\n| `interaction.depth` (L) | tree depth | 1 | 3–5 for interactions | {1, 3, 5} |\n| `bag.fraction` | row subsample per tree | 0.5 | 0.5 | 0.5, 0.7 |\n| `cv.folds` | CV for picking `n.trees` | 0 (off) | 5 | 5, 10 |\n\n## Argument Quirks\n- The argument is **`distribution = list(name = \"EDM\", alpha = ρ)`** — `alpha` here is the *variance power*, NOT the elastic net mixing or a learning rate. Confusingly overloaded name; the benchmark scripts in `archive/auto-insurance-bench-*` get this right.\n- `n.trees` is the *maximum* number of trees fit; the optimal number must be selected via `TDboost.perf(..., method = \"cv\")`. Predicting with the full `n.trees` overfits.\n- `keep.data = FALSE` matters for memory if the dataset is wide. Setting `TRUE` (the default) caches the training data inside the fit object.\n- Exposure: TDboost does **not** support a `weights` or `offset` argument that maps cleanly to Tweedie exposure. The conventional workaround is modeling `CLM_AMT / exposure` and weighting by `exposure`, but the weighting must be passed as `w` — check vignette before relying.\n\n## Failure Modes\n- **Overfitting with too many trees.** Always use `TDboost.perf(..., method = \"cv\")` to select `best_iter`. Predicting at `n.trees = fit$n.trees` (no selection) is a common mistake.\n- Convergence stalls for very sparse zero-inflated data (>98% zeros) — increase `bag.fraction` to 0.7 or use stratified sampling.\n- Categorical variables with many rare levels cause unstable splits — bucket levels with <1% frequency before fitting.\n- `predict` with `type = \"response\"` requires a fitted distribution; if `keep.data = FALSE` AND the original data frame is no longer available, you must recreate the distribution object.\n\n## Code Example\nSee `[[examples/yang-2016-tdboost]]`.\n\n## Domain Pitfalls\n- Partial-dependence plots for actuarial pricing should be checked for monotonicity violations (e.g., young drivers being cheaper than middle-aged). The paper notes \"risk does not monotonically decrease as age increases\" — fine for prediction, but final rates often need monotone post-processing.\n- Boosting absorbs zero-inflation naturally via the EDM distribution. Do NOT filter zero-claim rows.\n- TDboost is nonparametric — no built-in handling for unseen factor levels in test. Predictions for new levels fall back to the marginal mean.\n\n## Connections\n- [[GradientTreeBoosting]] — core algorithm\n- [[TweedieDistribution]] — response distribution\n- [[ProfileLikelihood]] — for ρ, φ\n- [[PartialDependencePlots]] — interpretation\n- [[YiYang]], [[WeiQian]], [[HuiZou]]\n\n## Contradictions\nNone with existing wiki content.\n",
+      "markdown": "---\ntitle: \"Insurance Premium Prediction via Gradient Tree-Boosted Tweedie Compound Poisson Models\"\ntype: source\ntags: [method, TDboost, tweedie, boosting, insurance]\ndate: 2016-04-22\nsource_file: knowledge/raw/papers/yang-2016-tdboost.md\n---\n\n## Summary\nYang, Qian, and Zou replace the linear log-mean structure of the Tweedie GLM with a flexible boosted-tree ensemble. The TDboost algorithm is forward-stagewise gradient boosting under the Tweedie negative log-likelihood. ρ (variance power) and φ (dispersion) are estimated by profile likelihood. The R package `TDboost` includes partial-dependence plots so the model is not a complete black box.\n\n## Canonical API\n```R\nlibrary(TDboost)\n\n# Profile-likelihood for rho (variance power) is INSIDE the package as\n# TDboost(distribution=list(name=\"EDM\", alpha=rho), ...) — alpha here means rho\nfit <- TDboost(\n  formula      = CLM_AMT ~ AGE + BLUEBOOK + MVR_PTS + AREA + ...,\n  data         = train,\n  distribution = list(name = \"EDM\", alpha = 1.5),   # alpha IS the variance power\n  n.trees      = 3000,\n  interaction.depth = 3,\n  shrinkage    = 0.005,                              # paper-recommended\n  bag.fraction = 0.5,\n  cv.folds     = 5,\n  keep.data    = FALSE\n)\n\n# Pick best iteration from CV\nbest_iter <- TDboost.perf(fit, method = \"cv\", plot.it = FALSE)\ny_hat     <- predict(fit, newdata = test, n.trees = best_iter, type = \"response\")\n\n# Interpretation\nrelative.influence(fit, n.trees = best_iter)         # variable importance\nplot(fit, i.var = \"AGE\", n.trees = best_iter)        # partial dependence\n```\n\nEnd-to-end: `[[examples/yang-2016-tdboost]]`.\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| `distribution$alpha` | variance power ρ, in (1, 2) | 1.5 | profile via inner loop | {1.3, 1.5, 1.7} |\n| `n.trees` | boosting rounds | 100 | 3000+ with `shrinkage = 0.005`; pick via `TDboost.perf` | 1000–5000 |\n| `shrinkage` (ν) | learning rate | 0.001 | **0.005** (paper) | 0.001, 0.005, 0.01 |\n| `interaction.depth` (L) | tree depth | 1 | 3–5 for interactions | {1, 3, 5} |\n| `bag.fraction` | row subsample per tree | 0.5 | 0.5 | 0.5, 0.7 |\n| `cv.folds` | CV for picking `n.trees` | 0 (off) | 5 | 5, 10 |\n\n## Argument Quirks\n- The argument is **`distribution = list(name = \"EDM\", alpha = ρ)`** — `alpha` here is the *variance power*, NOT the elastic net mixing or a learning rate. Confusingly overloaded name; the benchmark scripts in `archive/auto-insurance-bench-*` get this right.\n- `n.trees` is the *maximum* number of trees fit; the optimal number must be selected via `TDboost.perf(..., method = \"cv\")`. Predicting with the full `n.trees` overfits.\n- `keep.data = FALSE` matters for memory if the dataset is wide. Setting `TRUE` (the default) caches the training data inside the fit object.\n- Exposure: TDboost does **not** support a `weights` or `offset` argument that maps cleanly to Tweedie exposure. The conventional workaround is modeling `CLM_AMT / exposure` and weighting by `exposure`, but the weighting must be passed as `w` — check vignette before relying.\n\n## Failure Modes\n- **Overfitting with too many trees.** Always use `TDboost.perf(..., method = \"cv\")` to select `best_iter`. Predicting at `n.trees = fit$n.trees` (no selection) is a common mistake.\n- Convergence stalls for very sparse zero-inflated data (>98% zeros) — increase `bag.fraction` to 0.7 or use stratified sampling.\n- Categorical variables with many rare levels cause unstable splits — bucket levels with <1% frequency before fitting.\n- `predict` with `type = \"response\"` requires a fitted distribution; if `keep.data = FALSE` AND the original data frame is no longer available, you must recreate the distribution object.\n\n## Code Example\nSee `[[examples/yang-2016-tdboost]]`.\n\n## Domain Pitfalls\n- Partial-dependence plots for actuarial pricing should be checked for monotonicity violations (e.g., young drivers being cheaper than middle-aged). The paper notes \"risk does not monotonically decrease as age increases\" — fine for prediction, but final rates often need monotone post-processing.\n- Boosting absorbs zero-inflation naturally via the EDM distribution. Do NOT filter zero-claim rows.\n- TDboost is nonparametric — no built-in handling for unseen factor levels in test. Predictions for new levels fall back to the marginal mean.\n\n## Connections\n- [[GradientTreeBoosting]] — core algorithm\n- [[TweedieDistribution]] — response distribution\n- [[ProfileLikelihood]] — for ρ, φ\n- [[PartialDependencePlots]] — interpretation\n- [[YiYang]], [[WeiQian]], [[HuiZou]]\n\n## Contradictions\nNone with existing wiki content.\n",
       "preview": "## Summary Yang, Qian, and Zou replace the linear log-mean structure of the Tweedie GLM with a flexible boosted-tree ensemble. The TDboost algorithm is forward-stagewise gradient boosting under the Tweedie negative log-l",
       "group": 0,
       "value": 9
@@ -248,7 +248,7 @@
       "type": "source",
       "color": "#00BCD4",
       "path": "knowledge/wiki/sources/frees-meyers-cummings-2011-gini.md",
-      "markdown": "---\ntitle: \"Risk Based Scores and the Gini Index\"\ntype: source\ntags: [method, cplm, gini, evaluation, insurance]\ndate: 2011-04-27\nsource_file: raw/papers/frees-meyers-cummings-2011-gini.md\n---\n\n## Summary\nFrees, Meyers, and Cummings extend the classic Lorenz curve / Gini index to insurance pricing by sorting losses and premiums by a *relativity* `R = S(x) / P(x)` (alternative score divided by base premium). The resulting *ordered* Lorenz curve quantifies how much loss separation a candidate score `S` achieves beyond a base premium `P`. The associated Gini index is approximately twice the average expected profit from adopting `S`. Useful precisely because it can be computed against any base premium — including a constant — and so handles the zero-inflation that breaks classical metrics.\n\n## Canonical API\n```R\nlibrary(cplm)\n\n# y_true:    observed losses (vector)\n# y_score:   candidate score under evaluation\n# y_base:    baseline / reference premium (often a constant or simpler model)\ngini_result <- cplm::gini(\n  loss     = y_true,\n  score    = y_score,\n  baseline = y_base       # if comparing two models, pass the older model here\n)\n\ngini_result$gini          # the index in percent\ngini_result$se            # asymptotic standard error\nplot(gini_result)         # the ordered Lorenz curve\n```\n\nFor a *minimax* comparison across many candidate scores, loop over all (base, score) pairs and report the table — the paper's Section 3 example.\n\nEnd-to-end: `[[examples/frees-meyers-cummings-2011-gini]]`.\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| `baseline` | reference premium | — | constant premium for first pass; competing model for second pass | both |\n| sort direction | by relativity ascending | yes | yes | — |\n\nThe metric itself has no hyperparameters — it's deterministic given inputs.\n\n## Argument Quirks\n- **`gini(loss, score, baseline)` — NOT `(y_true, y_pred)`.** The relativity is computed internally as `score / baseline`. Passing the candidate score where baseline is expected silently produces a number that looks plausible but means nothing.\n- For a single-model evaluation against a constant baseline, pass `baseline = rep(mean(loss), length(loss))` or `baseline = 1`. The benchmark scripts in `archive/auto-insurance-bench-*` define `gini_insurance(y_true, y_pred)` which collapses to score-vs-constant — this is a valid use case but should be labeled as such.\n- Ties in relativity are broken by score order; for very discrete predictions (e.g., rounded), break ties before passing in.\n- Asymptotic SE assumes ≥ ~1000 observations; under that, bootstrap.\n\n## Failure Modes\n- **Gini > 0.6 on `AutoClaim` should trigger a leakage audit.** Published Gini for Tweedie/penalized methods on this dataset is in the 0.30–0.45 range; the `medium-01` benchmark hit 0.69, almost certainly indicating a data-prep bug, not a real model improvement.\n- Gini < 0.05 with SE near the point estimate → score is no better than baseline; do not adopt.\n- A candidate score that achieves high Gini against one baseline but negative against another is *less* robust, not more — see the paper's minimax discussion.\n\n## Code Example\nSee `[[examples/frees-meyers-cummings-2011-gini]]`.\n\n## Domain Pitfalls\n- Gini is **rank-based**, not calibration-based. A model can have excellent Gini and still be miscalibrated (predicted mean ≠ observed mean). Always pair Gini with a calibration check — see [[CalibrationPlots]].\n- Adverse selection framing: if competitor adopts a refined score and you don't, your portfolio loses good risks. Ordered Lorenz quantifies *exactly* that exposure.\n- Single Gini number is not a hypothesis test — use the asymptotic SE to compare candidate scores statistically. Differences within 2 SEs are not actionable.\n\n## Connections\n- [[GiniIndex]] — concept\n- [[LorenzCurve]] — graphical companion\n- [[AdverseSelection]] — economic motivation\n- [[CalibrationPlots]] — complementary diagnostic\n- [[EdwardWFrees]], [[GlennMeyers]], [[ADavidCummings]]\n\n## Contradictions\nNone with existing wiki content.\n",
+      "markdown": "---\ntitle: \"Risk Based Scores and the Gini Index\"\ntype: source\ntags: [method, cplm, gini, evaluation, insurance]\ndate: 2011-04-27\nsource_file: knowledge/raw/papers/frees-meyers-cummings-2011-gini.md\n---\n\n## Summary\nFrees, Meyers, and Cummings extend the classic Lorenz curve / Gini index to insurance pricing by sorting losses and premiums by a *relativity* `R = S(x) / P(x)` (alternative score divided by base premium). The resulting *ordered* Lorenz curve quantifies how much loss separation a candidate score `S` achieves beyond a base premium `P`. The associated Gini index is approximately twice the average expected profit from adopting `S`. Useful precisely because it can be computed against any base premium — including a constant — and so handles the zero-inflation that breaks classical metrics.\n\n## Canonical API\n```R\nlibrary(cplm)\n\n# y_true:    observed losses (vector)\n# y_score:   candidate score under evaluation\n# y_base:    baseline / reference premium (often a constant or simpler model)\ngini_result <- cplm::gini(\n  loss     = y_true,\n  score    = y_score,\n  baseline = y_base       # if comparing two models, pass the older model here\n)\n\ngini_result$gini          # the index in percent\ngini_result$se            # asymptotic standard error\nplot(gini_result)         # the ordered Lorenz curve\n```\n\nFor a *minimax* comparison across many candidate scores, loop over all (base, score) pairs and report the table — the paper's Section 3 example.\n\nEnd-to-end: `[[examples/frees-meyers-cummings-2011-gini]]`.\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| `baseline` | reference premium | — | constant premium for first pass; competing model for second pass | both |\n| sort direction | by relativity ascending | yes | yes | — |\n\nThe metric itself has no hyperparameters — it's deterministic given inputs.\n\n## Argument Quirks\n- **`gini(loss, score, baseline)` — NOT `(y_true, y_pred)`.** The relativity is computed internally as `score / baseline`. Passing the candidate score where baseline is expected silently produces a number that looks plausible but means nothing.\n- For a single-model evaluation against a constant baseline, pass `baseline = rep(mean(loss), length(loss))` or `baseline = 1`. The benchmark scripts in `archive/auto-insurance-bench-*` define `gini_insurance(y_true, y_pred)` which collapses to score-vs-constant — this is a valid use case but should be labeled as such.\n- Ties in relativity are broken by score order; for very discrete predictions (e.g., rounded), break ties before passing in.\n- Asymptotic SE assumes ≥ ~1000 observations; under that, bootstrap.\n\n## Failure Modes\n- **Gini > 0.6 on `AutoClaim` should trigger a leakage audit.** Published Gini for Tweedie/penalized methods on this dataset is in the 0.30–0.45 range; the `medium-01` benchmark hit 0.69, almost certainly indicating a data-prep bug, not a real model improvement.\n- Gini < 0.05 with SE near the point estimate → score is no better than baseline; do not adopt.\n- A candidate score that achieves high Gini against one baseline but negative against another is *less* robust, not more — see the paper's minimax discussion.\n\n## Code Example\nSee `[[examples/frees-meyers-cummings-2011-gini]]`.\n\n## Domain Pitfalls\n- Gini is **rank-based**, not calibration-based. A model can have excellent Gini and still be miscalibrated (predicted mean ≠ observed mean). Always pair Gini with a calibration check — see [[CalibrationPlots]].\n- Adverse selection framing: if competitor adopts a refined score and you don't, your portfolio loses good risks. Ordered Lorenz quantifies *exactly* that exposure.\n- Single Gini number is not a hypothesis test — use the asymptotic SE to compare candidate scores statistically. Differences within 2 SEs are not actionable.\n\n## Connections\n- [[GiniIndex]] — concept\n- [[LorenzCurve]] — graphical companion\n- [[AdverseSelection]] — economic motivation\n- [[CalibrationPlots]] — complementary diagnostic\n- [[EdwardWFrees]], [[GlennMeyers]], [[ADavidCummings]]\n\n## Contradictions\nNone with existing wiki content.\n",
       "preview": "## Summary Frees, Meyers, and Cummings extend the classic Lorenz curve / Gini index to insurance pricing by sorting losses and premiums by a *relativity* `R = S(x) / P(x)` (alternative score divided by base premium). The",
       "group": 1,
       "value": 11
@@ -259,7 +259,7 @@
       "type": "source",
       "color": "#8BC34A",
       "path": "knowledge/wiki/sources/smyth-jorgensen-2002-tweedie-dispersion.md",
-      "markdown": "---\ntitle: \"Fitting Tweedie's Compound Poisson Model to Insurance Claims Data: Dispersion Modelling\"\ntype: source\ntags: [method, statmod, tweedie, dglm, insurance]\ndate: 2002-01-01\nsource_file: raw/papers/smyth-jorgensen-2002-tweedie-dispersion.md\n---\n\n## Summary\nSmyth and Jørgensen extend the Tweedie compound-Poisson GLM by fitting a *double* GLM that jointly models the mean **and** the dispersion. They observe that real claims data routinely violate the constant-dispersion assumption and that modeling dispersion via a second sub-GLM tightens tariff precision. The framework also handles the common case where only total cost is recorded (not claim counts). Demonstrated on the Swedish third-party auto portfolio.\n\n## Canonical API\nThe paper itself uses base R + custom code. The closest production equivalent today is `statmod::tweedie` plus `dglm::dglm`, or `cplm::cpglm` with formula-based dispersion modeling.\n\n```R\n# Single-mean Tweedie GLM (no dispersion model) — statmod\nlibrary(statmod)\nfit <- glm(CLM_AMT ~ ., data = train,\n           family = tweedie(var.power = 1.5, link.power = 0))\n\n# Double GLM (mean + dispersion) — dglm\nlibrary(dglm)\nfit_dglm <- dglm(formula  = CLM_AMT ~ AGE + BLUEBOOK + AREA,\n                 dformula = ~ AGE + AREA,                # dispersion submodel\n                 family   = tweedie(var.power = 1.5, link.power = 0),\n                 data     = train)\n```\n\nVerified end-to-end: `[[examples/smyth-jorgensen-2002-tweedie-dispersion]]` (marked `# UNVERIFIED` until run).\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| `var.power` (p) | mean-variance link, `Var(Y)=φμ^p` | none — must specify | profile likelihood over (1, 2) | {1.3, 1.5, 1.7} or `tweedie.profile()` |\n| `link.power` | link function | 0 = log | 0 (log link) | 0 |\n| dispersion formula | covariates for log(φ) | `~1` (constant) | as many factors as affect spread | start with main effects only |\n\n## Argument Quirks\n- `statmod::tweedie(var.power=1.7, link.power=0)` — `link.power=0` means log link. Setting `link.power=1` (identity) is almost always wrong for claims.\n- `dglm` writes the dispersion submodel as a gamma GLM on unit deviances. Pre-condition: the response in the mean model must already have positive support (after the zero-mass via Tweedie).\n- REML for dispersion uses `method=\"reml\"` (paper's recommendation) — `method=\"ml\"` produces biased φ estimates when n_params grows with n.\n\n## Failure Modes\n- Convergence stalls when p is mis-specified — symptom is dispersion submodel coefficients exploding. Diagnose with `tweedie.profile()`.\n- If only total cost is observed (no claim counts), use the response = total cost per unit exposure and pass `weights = exposure`. Omitting weights silently inflates dispersion.\n- Outliers in claim size dominate the dispersion fit. The paper notes REML mitigates but does not eliminate this — winsorize extreme claims or model on log scale.\n\n## Code Example\nSee `[[examples/smyth-jorgensen-2002-tweedie-dispersion]]`.\n\n## Domain Pitfalls\n- Variance power `p = (α + 2) / (α + 1)` where α is the gamma shape. Profile `p` from data; do **not** hardcode 1.5 or 1.7 — see [[TweedieVariancePowerEstimation]].\n- Exposure handling: `Y_i = Z_i / w_i` (claim per unit exposure). Pass `weights = w_i` to GLM; modeling raw `Z_i` without weights misallocates dispersion.\n- The benchmark in `archive/auto-insurance-bench-*` hardcodes `var.power = 1.7` with no profiling — this is the first thing to fix.\n\n## Connections\n- [[TweedieDistribution]] — underlying distribution\n- [[DoubleGeneralizedLinearModels]] — modeling framework\n- [[REML]] — variance estimation method\n- [[GeneralizedLinearModels]] — base\n- [[GordonKSmyth]], [[BentJorgensen]]\n\n## Contradictions\nNone with existing wiki content.\n",
+      "markdown": "---\ntitle: \"Fitting Tweedie's Compound Poisson Model to Insurance Claims Data: Dispersion Modelling\"\ntype: source\ntags: [method, statmod, tweedie, dglm, insurance]\ndate: 2002-01-01\nsource_file: knowledge/raw/papers/smyth-jorgensen-2002-tweedie-dispersion.md\n---\n\n## Summary\nSmyth and Jørgensen extend the Tweedie compound-Poisson GLM by fitting a *double* GLM that jointly models the mean **and** the dispersion. They observe that real claims data routinely violate the constant-dispersion assumption and that modeling dispersion via a second sub-GLM tightens tariff precision. The framework also handles the common case where only total cost is recorded (not claim counts). Demonstrated on the Swedish third-party auto portfolio.\n\n## Canonical API\nThe paper itself uses base R + custom code. The closest production equivalent today is `statmod::tweedie` plus `dglm::dglm`, or `cplm::cpglm` with formula-based dispersion modeling.\n\n```R\n# Single-mean Tweedie GLM (no dispersion model) — statmod\nlibrary(statmod)\nfit <- glm(CLM_AMT ~ ., data = train,\n           family = tweedie(var.power = 1.5, link.power = 0))\n\n# Double GLM (mean + dispersion) — dglm\nlibrary(dglm)\nfit_dglm <- dglm(formula  = CLM_AMT ~ AGE + BLUEBOOK + AREA,\n                 dformula = ~ AGE + AREA,                # dispersion submodel\n                 family   = tweedie(var.power = 1.5, link.power = 0),\n                 data     = train)\n```\n\nVerified end-to-end: `[[examples/smyth-jorgensen-2002-tweedie-dispersion]]` (marked `# UNVERIFIED` until run).\n\n## Key Hyperparameters\n| Name | Role | Default | Paper-recommended | Sensible grid |\n|---|---|---|---|---|\n| `var.power` (p) | mean-variance link, `Var(Y)=φμ^p` | none — must specify | profile likelihood over (1, 2) | {1.3, 1.5, 1.7} or `tweedie.profile()` |\n| `link.power` | link function | 0 = log | 0 (log link) | 0 |\n| dispersion formula | covariates for log(φ) | `~1` (constant) | as many factors as affect spread | start with main effects only |\n\n## Argument Quirks\n- `statmod::tweedie(var.power=1.7, link.power=0)` — `link.power=0` means log link. Setting `link.power=1` (identity) is almost always wrong for claims.\n- `dglm` writes the dispersion submodel as a gamma GLM on unit deviances. Pre-condition: the response in the mean model must already have positive support (after the zero-mass via Tweedie).\n- REML for dispersion uses `method=\"reml\"` (paper's recommendation) — `method=\"ml\"` produces biased φ estimates when n_params grows with n.\n\n## Failure Modes\n- Convergence stalls when p is mis-specified — symptom is dispersion submodel coefficients exploding. Diagnose with `tweedie.profile()`.\n- If only total cost is observed (no claim counts), use the response = total cost per unit exposure and pass `weights = exposure`. Omitting weights silently inflates dispersion.\n- Outliers in claim size dominate the dispersion fit. The paper notes REML mitigates but does not eliminate this — winsorize extreme claims or model on log scale.\n\n## Code Example\nSee `[[examples/smyth-jorgensen-2002-tweedie-dispersion]]`.\n\n## Domain Pitfalls\n- Variance power `p = (α + 2) / (α + 1)` where α is the gamma shape. Profile `p` from data; do **not** hardcode 1.5 or 1.7 — see [[TweedieVariancePowerEstimation]].\n- Exposure handling: `Y_i = Z_i / w_i` (claim per unit exposure). Pass `weights = w_i` to GLM; modeling raw `Z_i` without weights misallocates dispersion.\n- The benchmark in `archive/auto-insurance-bench-*` hardcodes `var.power = 1.7` with no profiling — this is the first thing to fix.\n\n## Connections\n- [[TweedieDistribution]] — underlying distribution\n- [[DoubleGeneralizedLinearModels]] — modeling framework\n- [[REML]] — variance estimation method\n- [[GeneralizedLinearModels]] — base\n- [[GordonKSmyth]], [[BentJorgensen]]\n\n## Contradictions\nNone with existing wiki content.\n",
       "preview": "## Summary Smyth and Jørgensen extend the Tweedie compound-Poisson GLM by fitting a *double* GLM that jointly models the mean **and** the dispersion. They observe that real claims data routinely violate the constant-disp",
       "group": 2,
       "value": 12
@@ -421,59 +421,9 @@
   ],
   "edges": [
     {
-      "id": "overview->sources/frees-meyers-cummings-2011-gini:EXTRACTED",
+      "id": "overview->sources/wood-2011-gam-reml:EXTRACTED",
       "from": "overview",
-      "to": "sources/frees-meyers-cummings-2011-gini",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
-      "id": "overview->sources/dunn-smyth-2008-tweedie-fourier:EXTRACTED",
-      "from": "overview",
-      "to": "sources/dunn-smyth-2008-tweedie-fourier",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
-      "id": "overview->concepts/AdverseSelection:EXTRACTED",
-      "from": "overview",
-      "to": "concepts/AdverseSelection",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
-      "id": "overview->sources/zhang-2013-cplm:EXTRACTED",
-      "from": "overview",
-      "to": "sources/zhang-2013-cplm",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
-      "id": "overview->concepts/LeakageAudit:EXTRACTED",
-      "from": "overview",
-      "to": "concepts/LeakageAudit",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
-      "id": "overview->concepts/CalibrationPlots:EXTRACTED",
-      "from": "overview",
-      "to": "concepts/CalibrationPlots",
+      "to": "sources/wood-2011-gam-reml",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -501,9 +451,9 @@
       "label": ""
     },
     {
-      "id": "overview->sources/delong-lindholm-wuthrich-2021-tweedie:EXTRACTED",
+      "id": "overview->concepts/AdverseSelection:EXTRACTED",
       "from": "overview",
-      "to": "sources/delong-lindholm-wuthrich-2021-tweedie",
+      "to": "concepts/AdverseSelection",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -521,16 +471,6 @@
       "label": ""
     },
     {
-      "id": "overview->sources/wood-2011-gam-reml:EXTRACTED",
-      "from": "overview",
-      "to": "sources/wood-2011-gam-reml",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
       "id": "overview->concepts/TweedieVariancePowerEstimation:EXTRACTED",
       "from": "overview",
       "to": "concepts/TweedieVariancePowerEstimation",
@@ -541,9 +481,59 @@
       "label": ""
     },
     {
-      "id": "concepts/LorenzCurve->sources/frees-meyers-cummings-2011-gini:EXTRACTED",
-      "from": "concepts/LorenzCurve",
+      "id": "overview->sources/dunn-smyth-2008-tweedie-fourier:EXTRACTED",
+      "from": "overview",
+      "to": "sources/dunn-smyth-2008-tweedie-fourier",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
+      "id": "overview->concepts/CalibrationPlots:EXTRACTED",
+      "from": "overview",
+      "to": "concepts/CalibrationPlots",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
+      "id": "overview->sources/delong-lindholm-wuthrich-2021-tweedie:EXTRACTED",
+      "from": "overview",
+      "to": "sources/delong-lindholm-wuthrich-2021-tweedie",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
+      "id": "overview->sources/zhang-2013-cplm:EXTRACTED",
+      "from": "overview",
+      "to": "sources/zhang-2013-cplm",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
+      "id": "overview->sources/frees-meyers-cummings-2011-gini:EXTRACTED",
+      "from": "overview",
       "to": "sources/frees-meyers-cummings-2011-gini",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
+      "id": "overview->concepts/LeakageAudit:EXTRACTED",
+      "from": "overview",
+      "to": "concepts/LeakageAudit",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -554,6 +544,16 @@
       "id": "concepts/LorenzCurve->concepts/GiniIndex:EXTRACTED",
       "from": "concepts/LorenzCurve",
       "to": "concepts/GiniIndex",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
+      "id": "concepts/LorenzCurve->sources/frees-meyers-cummings-2011-gini:EXTRACTED",
+      "from": "concepts/LorenzCurve",
+      "to": "sources/frees-meyers-cummings-2011-gini",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -611,39 +611,9 @@
       "label": ""
     },
     {
-      "id": "concepts/GeneralizedLinearModels->concepts/GroupedElasticNet:EXTRACTED",
-      "from": "concepts/GeneralizedLinearModels",
-      "to": "concepts/GroupedElasticNet",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
-      "id": "concepts/GeneralizedLinearModels->concepts/GradientTreeBoosting:EXTRACTED",
-      "from": "concepts/GeneralizedLinearModels",
-      "to": "concepts/GradientTreeBoosting",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
       "id": "concepts/GeneralizedLinearModels->sources/smyth-jorgensen-2002-tweedie-dispersion:EXTRACTED",
       "from": "concepts/GeneralizedLinearModels",
       "to": "sources/smyth-jorgensen-2002-tweedie-dispersion",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
-      "id": "concepts/GeneralizedLinearModels->sources/delong-lindholm-wuthrich-2021-tweedie:EXTRACTED",
-      "from": "concepts/GeneralizedLinearModels",
-      "to": "sources/delong-lindholm-wuthrich-2021-tweedie",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -671,9 +641,39 @@
       "label": ""
     },
     {
-      "id": "concepts/AdverseSelection->sources/delong-lindholm-wuthrich-2021-tweedie:EXTRACTED",
-      "from": "concepts/AdverseSelection",
+      "id": "concepts/GeneralizedLinearModels->sources/delong-lindholm-wuthrich-2021-tweedie:EXTRACTED",
+      "from": "concepts/GeneralizedLinearModels",
       "to": "sources/delong-lindholm-wuthrich-2021-tweedie",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
+      "id": "concepts/GeneralizedLinearModels->concepts/GroupedElasticNet:EXTRACTED",
+      "from": "concepts/GeneralizedLinearModels",
+      "to": "concepts/GroupedElasticNet",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
+      "id": "concepts/GeneralizedLinearModels->concepts/GradientTreeBoosting:EXTRACTED",
+      "from": "concepts/GeneralizedLinearModels",
+      "to": "concepts/GradientTreeBoosting",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
+      "id": "concepts/AdverseSelection->concepts/GiniIndex:EXTRACTED",
+      "from": "concepts/AdverseSelection",
+      "to": "concepts/GiniIndex",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -701,39 +701,9 @@
       "label": ""
     },
     {
-      "id": "concepts/AdverseSelection->concepts/GiniIndex:EXTRACTED",
+      "id": "concepts/AdverseSelection->sources/delong-lindholm-wuthrich-2021-tweedie:EXTRACTED",
       "from": "concepts/AdverseSelection",
-      "to": "concepts/GiniIndex",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
-      "id": "concepts/TweedieDistribution->sources/dunn-smyth-2008-tweedie-fourier:EXTRACTED",
-      "from": "concepts/TweedieDistribution",
-      "to": "sources/dunn-smyth-2008-tweedie-fourier",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
-      "id": "concepts/TweedieDistribution->concepts/FrequencySeverityDecomposition:EXTRACTED",
-      "from": "concepts/TweedieDistribution",
-      "to": "concepts/FrequencySeverityDecomposition",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
-      "id": "concepts/TweedieDistribution->sources/zhang-2013-cplm:EXTRACTED",
-      "from": "concepts/TweedieDistribution",
-      "to": "sources/zhang-2013-cplm",
+      "to": "sources/delong-lindholm-wuthrich-2021-tweedie",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -761,9 +731,19 @@
       "label": ""
     },
     {
-      "id": "concepts/TweedieDistribution->sources/delong-lindholm-wuthrich-2021-tweedie:EXTRACTED",
+      "id": "concepts/TweedieDistribution->concepts/TweedieVariancePowerEstimation:EXTRACTED",
       "from": "concepts/TweedieDistribution",
-      "to": "sources/delong-lindholm-wuthrich-2021-tweedie",
+      "to": "concepts/TweedieVariancePowerEstimation",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
+      "id": "concepts/TweedieDistribution->sources/dunn-smyth-2008-tweedie-fourier:EXTRACTED",
+      "from": "concepts/TweedieDistribution",
+      "to": "sources/dunn-smyth-2008-tweedie-fourier",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -781,9 +761,29 @@
       "label": ""
     },
     {
-      "id": "concepts/TweedieDistribution->concepts/TweedieVariancePowerEstimation:EXTRACTED",
+      "id": "concepts/TweedieDistribution->concepts/FrequencySeverityDecomposition:EXTRACTED",
       "from": "concepts/TweedieDistribution",
-      "to": "concepts/TweedieVariancePowerEstimation",
+      "to": "concepts/FrequencySeverityDecomposition",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
+      "id": "concepts/TweedieDistribution->sources/delong-lindholm-wuthrich-2021-tweedie:EXTRACTED",
+      "from": "concepts/TweedieDistribution",
+      "to": "sources/delong-lindholm-wuthrich-2021-tweedie",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
+      "id": "concepts/TweedieDistribution->sources/zhang-2013-cplm:EXTRACTED",
+      "from": "concepts/TweedieDistribution",
+      "to": "sources/zhang-2013-cplm",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -831,6 +831,16 @@
       "label": ""
     },
     {
+      "id": "concepts/DoubleGeneralizedLinearModels->concepts/TweedieDistribution:EXTRACTED",
+      "from": "concepts/DoubleGeneralizedLinearModels",
+      "to": "concepts/TweedieDistribution",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
       "id": "concepts/DoubleGeneralizedLinearModels->sources/delong-lindholm-wuthrich-2021-tweedie:EXTRACTED",
       "from": "concepts/DoubleGeneralizedLinearModels",
       "to": "sources/delong-lindholm-wuthrich-2021-tweedie",
@@ -851,9 +861,9 @@
       "label": ""
     },
     {
-      "id": "concepts/DoubleGeneralizedLinearModels->concepts/TweedieDistribution:EXTRACTED",
-      "from": "concepts/DoubleGeneralizedLinearModels",
-      "to": "concepts/TweedieDistribution",
+      "id": "concepts/AutoClaimDataset->sources/yang-2016-tdboost:EXTRACTED",
+      "from": "concepts/AutoClaimDataset",
+      "to": "sources/yang-2016-tdboost",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -861,9 +871,9 @@
       "label": ""
     },
     {
-      "id": "concepts/AutoClaimDataset->concepts/GroupedElasticNet:EXTRACTED",
+      "id": "concepts/AutoClaimDataset->concepts/TweedieDistribution:EXTRACTED",
       "from": "concepts/AutoClaimDataset",
-      "to": "concepts/GroupedElasticNet",
+      "to": "concepts/TweedieDistribution",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -881,6 +891,16 @@
       "label": ""
     },
     {
+      "id": "concepts/AutoClaimDataset->concepts/GroupedElasticNet:EXTRACTED",
+      "from": "concepts/AutoClaimDataset",
+      "to": "concepts/GroupedElasticNet",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
       "id": "concepts/AutoClaimDataset->concepts/LeakageAudit:EXTRACTED",
       "from": "concepts/AutoClaimDataset",
       "to": "concepts/LeakageAudit",
@@ -891,18 +911,8 @@
       "label": ""
     },
     {
-      "id": "concepts/AutoClaimDataset->sources/yang-2016-tdboost:EXTRACTED",
-      "from": "concepts/AutoClaimDataset",
-      "to": "sources/yang-2016-tdboost",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
-      "id": "concepts/AutoClaimDataset->concepts/TweedieDistribution:EXTRACTED",
-      "from": "concepts/AutoClaimDataset",
+      "id": "concepts/PoissonGamma->concepts/TweedieDistribution:EXTRACTED",
+      "from": "concepts/PoissonGamma",
       "to": "concepts/TweedieDistribution",
       "type": "EXTRACTED",
       "color": "#555555",
@@ -931,16 +941,6 @@
       "label": ""
     },
     {
-      "id": "concepts/PoissonGamma->concepts/TweedieDistribution:EXTRACTED",
-      "from": "concepts/PoissonGamma",
-      "to": "concepts/TweedieDistribution",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
       "id": "concepts/GradientTreeBoosting->sources/yang-2016-tdboost:EXTRACTED",
       "from": "concepts/GradientTreeBoosting",
       "to": "sources/yang-2016-tdboost",
@@ -961,9 +961,9 @@
       "label": ""
     },
     {
-      "id": "concepts/TweedieVariancePowerEstimation->sources/smyth-jorgensen-2002-tweedie-dispersion:EXTRACTED",
+      "id": "concepts/TweedieVariancePowerEstimation->sources/zhang-2013-cplm:EXTRACTED",
       "from": "concepts/TweedieVariancePowerEstimation",
-      "to": "sources/smyth-jorgensen-2002-tweedie-dispersion",
+      "to": "sources/zhang-2013-cplm",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -971,9 +971,9 @@
       "label": ""
     },
     {
-      "id": "concepts/TweedieVariancePowerEstimation->sources/zhang-2013-cplm:EXTRACTED",
+      "id": "concepts/TweedieVariancePowerEstimation->sources/smyth-jorgensen-2002-tweedie-dispersion:EXTRACTED",
       "from": "concepts/TweedieVariancePowerEstimation",
-      "to": "sources/zhang-2013-cplm",
+      "to": "sources/smyth-jorgensen-2002-tweedie-dispersion",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -1001,6 +1001,16 @@
       "label": ""
     },
     {
+      "id": "sources/dunn-smyth-2008-tweedie-fourier->sources/smyth-jorgensen-2002-tweedie-dispersion:EXTRACTED",
+      "from": "sources/dunn-smyth-2008-tweedie-fourier",
+      "to": "sources/smyth-jorgensen-2002-tweedie-dispersion",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
       "id": "sources/dunn-smyth-2008-tweedie-fourier->entities/GordonKSmyth:EXTRACTED",
       "from": "sources/dunn-smyth-2008-tweedie-fourier",
       "to": "entities/GordonKSmyth",
@@ -1021,19 +1031,9 @@
       "label": ""
     },
     {
-      "id": "sources/dunn-smyth-2008-tweedie-fourier->sources/smyth-jorgensen-2002-tweedie-dispersion:EXTRACTED",
-      "from": "sources/dunn-smyth-2008-tweedie-fourier",
-      "to": "sources/smyth-jorgensen-2002-tweedie-dispersion",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
-      "id": "sources/delong-lindholm-wuthrich-2021-tweedie->entities/LukaszDelong:EXTRACTED",
+      "id": "sources/delong-lindholm-wuthrich-2021-tweedie->sources/smyth-jorgensen-2002-tweedie-dispersion:EXTRACTED",
       "from": "sources/delong-lindholm-wuthrich-2021-tweedie",
-      "to": "entities/LukaszDelong",
+      "to": "sources/smyth-jorgensen-2002-tweedie-dispersion",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -1051,9 +1051,9 @@
       "label": ""
     },
     {
-      "id": "sources/delong-lindholm-wuthrich-2021-tweedie->sources/smyth-jorgensen-2002-tweedie-dispersion:EXTRACTED",
+      "id": "sources/delong-lindholm-wuthrich-2021-tweedie->entities/LukaszDelong:EXTRACTED",
       "from": "sources/delong-lindholm-wuthrich-2021-tweedie",
-      "to": "sources/smyth-jorgensen-2002-tweedie-dispersion",
+      "to": "entities/LukaszDelong",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -1081,16 +1081,6 @@
       "label": ""
     },
     {
-      "id": "sources/qian-2016-hdtweedie->entities/YiYang:EXTRACTED",
-      "from": "sources/qian-2016-hdtweedie",
-      "to": "entities/YiYang",
-      "type": "EXTRACTED",
-      "color": "#555555",
-      "confidence": 1.0,
-      "title": "",
-      "label": ""
-    },
-    {
       "id": "sources/qian-2016-hdtweedie->entities/WeiQian:EXTRACTED",
       "from": "sources/qian-2016-hdtweedie",
       "to": "entities/WeiQian",
@@ -1111,9 +1101,9 @@
       "label": ""
     },
     {
-      "id": "sources/wood-2011-gam-reml->entities/SimonNWood:EXTRACTED",
-      "from": "sources/wood-2011-gam-reml",
-      "to": "entities/SimonNWood",
+      "id": "sources/qian-2016-hdtweedie->entities/YiYang:EXTRACTED",
+      "from": "sources/qian-2016-hdtweedie",
+      "to": "entities/YiYang",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -1121,9 +1111,9 @@
       "label": ""
     },
     {
-      "id": "sources/yang-2016-tdboost->entities/YiYang:EXTRACTED",
-      "from": "sources/yang-2016-tdboost",
-      "to": "entities/YiYang",
+      "id": "sources/wood-2011-gam-reml->entities/SimonNWood:EXTRACTED",
+      "from": "sources/wood-2011-gam-reml",
+      "to": "entities/SimonNWood",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -1151,9 +1141,9 @@
       "label": ""
     },
     {
-      "id": "sources/frees-meyers-cummings-2011-gini->entities/GlennMeyers:EXTRACTED",
-      "from": "sources/frees-meyers-cummings-2011-gini",
-      "to": "entities/GlennMeyers",
+      "id": "sources/yang-2016-tdboost->entities/YiYang:EXTRACTED",
+      "from": "sources/yang-2016-tdboost",
+      "to": "entities/YiYang",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -1171,6 +1161,16 @@
       "label": ""
     },
     {
+      "id": "sources/frees-meyers-cummings-2011-gini->entities/EdwardWFrees:EXTRACTED",
+      "from": "sources/frees-meyers-cummings-2011-gini",
+      "to": "entities/EdwardWFrees",
+      "type": "EXTRACTED",
+      "color": "#555555",
+      "confidence": 1.0,
+      "title": "",
+      "label": ""
+    },
+    {
       "id": "sources/frees-meyers-cummings-2011-gini->entities/ADavidCummings:EXTRACTED",
       "from": "sources/frees-meyers-cummings-2011-gini",
       "to": "entities/ADavidCummings",
@@ -1181,9 +1181,9 @@
       "label": ""
     },
     {
-      "id": "sources/frees-meyers-cummings-2011-gini->entities/EdwardWFrees:EXTRACTED",
+      "id": "sources/frees-meyers-cummings-2011-gini->entities/GlennMeyers:EXTRACTED",
       "from": "sources/frees-meyers-cummings-2011-gini",
-      "to": "entities/EdwardWFrees",
+      "to": "entities/GlennMeyers",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -1221,9 +1221,9 @@
       "label": ""
     },
     {
-      "id": "entities/EdwardWFrees->concepts/LorenzCurve:EXTRACTED",
+      "id": "entities/EdwardWFrees->concepts/GiniIndex:EXTRACTED",
       "from": "entities/EdwardWFrees",
-      "to": "concepts/LorenzCurve",
+      "to": "concepts/GiniIndex",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -1231,9 +1231,9 @@
       "label": ""
     },
     {
-      "id": "entities/EdwardWFrees->concepts/GiniIndex:EXTRACTED",
+      "id": "entities/EdwardWFrees->concepts/LorenzCurve:EXTRACTED",
       "from": "entities/EdwardWFrees",
-      "to": "concepts/GiniIndex",
+      "to": "concepts/LorenzCurve",
       "type": "EXTRACTED",
       "color": "#555555",
       "confidence": 1.0,
@@ -1261,5 +1261,5 @@
       "label": ""
     }
   ],
-  "built": "2026-05-15"
+  "built": "2026-05-20"
 }
