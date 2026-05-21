@@ -27,6 +27,7 @@ knowledge/         # All knowledge-base content lives here
   wiki/            # Agent owns this layer entirely
     index.md       # Catalog of all pages — update on every ingest
     log.md         # Append-only chronological record
+    gaps.md       # Append-only log of "no wiki support" moments — what to ingest next
     overview.md    # Living synthesis across all sources
     sources/       # One summary page per source document
     entities/      # People, companies, projects, products

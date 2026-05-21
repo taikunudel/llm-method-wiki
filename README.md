@@ -67,9 +67,13 @@ domain-specific code. Skipping it is not allowed.
   verbatim, then modify. Don't regenerate from training memory when an
   example exists.
 
-**If the wiki has nothing relevant:** log a `gap_surfaced` event (see the
-optional Task Trajectory section further down in this README) and proceed,
-citing "no wiki support" — but only after you've actually checked.
+**If the wiki has nothing relevant:** append an entry to
+`llm-wiki-agent/knowledge/wiki/gaps.md` describing what was missing (use
+the format documented at the top of that file), then proceed, citing
+"no wiki support". The wiki maintainer reviews `gaps.md` to decide what
+to ingest next. (Optional additional: if trajectory logging is enabled,
+also log a `gap_surfaced` event — see the Task Trajectory section
+further down in this README.)
 
 **Layout (so you know where to look):**
 

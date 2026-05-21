@@ -27,6 +27,7 @@ knowledge/         # All knowledge-base content lives here
   wiki/            # Agent owns this layer entirely
     index.md       # Catalog of all pages — update on every ingest
     log.md         # Append-only chronological record
+    gaps.md       # Append-only log of "no wiki support" moments — what to ingest next
     overview.md    # Living synthesis across all sources
     sources/       # One summary page per source document
     entities/      # People, companies, projects, products
@@ -326,7 +327,7 @@ Steps:
 2. Read every page whose title names a concept, package, method, or term appearing in the task
 3. If the task touches a `[method]` or `[software]` concept that has **no** `knowledge/wiki/examples/<slug>` file, surface the gap to the user **before** writing code. Do NOT invent the API.
 4. Cite the originating wiki page(s) inline in code comments where a non-obvious choice is made (e.g., `# variance power per [[TweedieDistribution]]`)
-5. After the task, if the work surfaced a gap, contradiction, or new pitfall, propose a wiki update before closing out
+5. After the task, if the work surfaced a gap (a substantive decision made with no wiki support), **append an entry to `knowledge/wiki/gaps.md`** with the format documented at the top of that file. Also surface contradictions or new pitfalls and propose a wiki update before closing out.
 
 ---
 
