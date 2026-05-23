@@ -1,5 +1,7 @@
 # llm-method-wiki
 
+Give the link of this repo to an llm agent, let it clone and modify the agent.md for you.
+
 > **A method-aware knowledge base that coding agents consult *before* writing model code — not a summary wiki they read for context.**
 
 ## Setup — wire this wiki into your agent's workspace
